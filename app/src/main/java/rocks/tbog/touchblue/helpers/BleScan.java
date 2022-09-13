@@ -16,6 +16,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import rocks.tbog.touchblue.BleEntry;
@@ -63,21 +64,19 @@ public class BleScan {
     private void addScanResult(@NonNull ScanResult result) {
         mIsScanning = true;
 
-        boolean shouldAddNewEntry = true;
         // check if the same address already found
-        for (var entry : mList) {
-            if (entry.scanResult.getDevice().getAddress().equals(result.getDevice().getAddress())) {
-                entry.scanResult = result;
-                shouldAddNewEntry = false;
+        for (Iterator<BleEntry> iterator = mList.iterator(); iterator.hasNext(); ) {
+            BleEntry entry = iterator.next();
+            if (entry.equalsResult(result)) {
+                iterator.remove();
                 break;
             }
         }
 
-        if (shouldAddNewEntry) {
-            BleEntry bleEntry = new BleEntry();
-            bleEntry.scanResult = result;
-            mList.add(bleEntry);
-        }
+        BleEntry bleEntry = new BleEntry(result);
+        mList.add(bleEntry);
+
+        Collections.sort(mList, (o1, o2) -> o1.getAddress().compareToIgnoreCase(o2.getAddress()));
 
         // notify live data of the changed list
         mEntryLiveData.postValue(mList);

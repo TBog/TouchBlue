@@ -1,26 +1,20 @@
 package rocks.tbog.touchblue.helpers;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.companion.BluetoothDeviceFilter;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+
+import rocks.tbog.touchblue.BleEntry;
 
 public class BleHelper {
     private static final String TAG = BleHelper.class.getSimpleName();
@@ -63,56 +57,13 @@ public class BleHelper {
         return bleScan;
     }
 
-    public static void connect(Context ctx, ScanResult result) {
+    public static void connect(Context ctx, BleEntry entry) {
         if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(ctx, "Permission needed", Toast.LENGTH_SHORT).show();
             return;
         }
-        result.getDevice().connectGatt(ctx, false, new GattCallback());
+        var device = entry.getScanResult().getDevice();
+        entry.bluetoothGatt = device.connectGatt(ctx, false, entry.getCallback());
     }
 
-    private static class GattCallback extends BluetoothGattCallback {
-        private static final String TAG = GattCallback.class.getSimpleName();
-
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            var deviceAddress = gatt.getDevice().getAddress();
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    Log.i(TAG, "Successfully connected to " + deviceAddress);
-                    new Handler(Looper.getMainLooper()).post(gatt::discoverServices);
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    Log.i(TAG, "Successfully disconnected from " + deviceAddress);
-                    gatt.close();
-                }
-            } else {
-                Log.w(TAG, "Error 0x" + Integer.toHexString(status) + " encountered for " + deviceAddress + "! Disconnecting...");
-                gatt.close();
-            }
-        }
-
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            var deviceAddress = gatt.getDevice().getAddress();
-            Log.i(TAG, "ServicesDiscovered status=" + status + " for " + deviceAddress);
-            var services = gatt.getServices();
-            var stringBuilder = new StringBuilder();
-            stringBuilder
-                    .append("device ")
-                    .append(deviceAddress)
-                    .append(" has:\n");
-            for (var service : services) {
-                stringBuilder
-                        .append("service ")
-                        .append(service.getUuid())
-                        .append(" with ")
-                        .append(service.getCharacteristics().size())
-                        .append(" characteristic(s) and ")
-                        .append(service.getIncludedServices().size())
-                        .append(" included service(s)\n");
-            }
-            Log.i(TAG, stringBuilder.toString());
-        }
-    }
 }

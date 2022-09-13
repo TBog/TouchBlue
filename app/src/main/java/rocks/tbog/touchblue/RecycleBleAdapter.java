@@ -17,11 +17,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import rocks.tbog.touchblue.helpers.BleHelper;
-
 public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Holder> {
     @NonNull
     private final ArrayList<BleEntry> list = new ArrayList<>();
+    private OnItemClickListener mItemClickListener = null;
+
+    interface OnItemClickListener {
+        void onClick(BleEntry entry, int position);
+    }
 
     public RecycleBleAdapter() {
         setHasStableIds(true);
@@ -38,13 +41,12 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
 
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
-        holder.setContent(list.get(position));
-    }
-
-    public void setItems(Collection<BleEntry> collection) {
-        list.clear();
-        list.addAll(collection);
-        notifyDataSetChanged();
+        var entry = list.get(position);
+        holder.setContent(entry);
+        holder.btnConnect.setOnClickListener(v -> {
+            if (mItemClickListener != null)
+                mItemClickListener.onClick(entry, position);
+        });
     }
 
     @Override
@@ -55,6 +57,16 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
     @Override
     public long getItemId(int position) {
         return position < list.size() ? list.get(position).hashCode() : -1;
+    }
+
+    public void setItems(Collection<BleEntry> collection) {
+        list.clear();
+        list.addAll(collection);
+        notifyDataSetChanged();
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        mItemClickListener = listener;
     }
 
     public static class Holder extends RecyclerView.ViewHolder {
@@ -74,17 +86,18 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
         }
 
         public void setContent(BleEntry entry) {
-            if (entry.scanResult == null) {
-                deviceName.setText("-");
-                deviceMac.setText("-");
-                deviceData.setText("-");
-                signal.setText("-");
-                btnConnect.setClickable(false);
-                return;
-            }
+            var scanResult = entry.getScanResult();
+//            if (scanResult == null) {
+//                deviceName.setText("-");
+//                deviceMac.setText("-");
+//                deviceData.setText("-");
+//                signal.setText("-");
+//                btnConnect.setClickable(false);
+//                return;
+//            }
             var ctx = itemView.getContext();
-            var scanRec = entry.scanResult.getScanRecord();
-            var dev = entry.scanResult.getDevice();
+            var scanRec = scanResult.getScanRecord();
+            var dev = scanResult.getDevice();
             String name = scanRec.getDeviceName();
             if (name == null || name.isEmpty()) {
                 if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
@@ -101,15 +114,12 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
             }
             int txPower = scanRec.getTxPowerLevel();
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                txPower = entry.scanResult.getTxPower();
+                txPower = scanResult.getTxPower();
             }
             deviceName.setText(name);
             signal.setText(txPower + " dBm");
             deviceMac.setText(dev.getAddress());
-            deviceData.setText("rssi " + entry.scanResult.getRssi() + " dBm");
-            btnConnect.setOnClickListener(v -> {
-                BleHelper.connect(ctx, entry.scanResult);
-            });
+            deviceData.setText("rssi " + scanResult.getRssi() + " dBm");
         }
     }
 }

@@ -13,4 +13,9 @@
     <string name="error_no_blt_le">Your device does not have Bluetooth Low Energy</string>
     <string name="fab_search">Search for device</string>
     <string name="connect">Connect to device</string>
+    <string name="activity_scan">BLE device scan</string>
+    <string name="ble_not_supported">BLE is not supported</string>
+    <string name="error_bluetooth_not_supported">Bluetooth is not supported</string>
+    <string name="action_scan">Start scan</string>
+    <string name="action_scan_off">Stop scan</string>
 </resources>

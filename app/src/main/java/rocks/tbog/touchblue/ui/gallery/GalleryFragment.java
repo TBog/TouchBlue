@@ -34,7 +34,7 @@ public class GalleryFragment extends Fragment {
         final RecycleBleAdapter bleAdapter = new RecycleBleAdapter();
         binding.list.setAdapter(bleAdapter);
 
-        bleAdapter.setItems(Collections.singletonList(new BleEntry()));
+        //bleAdapter.setItems(Collections.singletonList(new BleEntry()));
         //bleAdapter.setOnItemClickListener(item->{});
 
         var appData = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
