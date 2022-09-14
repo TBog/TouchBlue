@@ -2,6 +2,7 @@ package rocks.tbog.touchblue.helpers;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
@@ -9,6 +10,8 @@ import android.companion.BluetoothDeviceFilter;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -63,7 +66,12 @@ public class BleHelper {
             return;
         }
         var device = entry.getScanResult().getDevice();
-        device.connectGatt(ctx, false, entry.getCallback());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // starting with SDK 27 we can set the thread of the callback using a handler
+            device.connectGatt(ctx, false, entry.getCallback(), BluetoothDevice.TRANSPORT_AUTO, BluetoothDevice.PHY_LE_1M_MASK, new Handler(Looper.getMainLooper()));
+        } else {
+            device.connectGatt(ctx, false, entry.getCallback());
+        }
     }
 
 }
