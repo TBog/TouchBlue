@@ -56,7 +56,7 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
 
     @Override
     public long getItemId(int position) {
-        return position < list.size() ? list.get(position).hashCode() : -1;
+        return position < list.size() ? list.get(position).getAddress().hashCode() : -1;
     }
 
     public void setItems(Collection<BleEntry> collection) {
