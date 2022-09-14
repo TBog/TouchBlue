@@ -58,17 +58,7 @@ public class BleEntry {
 
     @SuppressLint("MissingPermission")
     public boolean writeCharacteristic(UUID service, UUID characteristic, int newValue) {
-        //check mBluetoothGatt is available
-        if (bluetoothGatt == null) {
-            Log.e(TAG, "lost connection");
-            return false;
-        }
-        BluetoothGattService Service = bluetoothGatt.getService(service);
-        if (Service == null) {
-            Log.e(TAG, "service not found!");
-            return false;
-        }
-        var serviceCharacteristic = Service.getCharacteristic(characteristic);
+        var serviceCharacteristic = getCharacteristic(service, characteristic);
         if (serviceCharacteristic == null) {
             Log.e(TAG, "characteristic not found!");
             return false;
@@ -78,6 +68,16 @@ public class BleEntry {
         value[0] = (byte) (newValue & 0xFF);
         serviceCharacteristic.setValue(value);
         return bluetoothGatt.writeCharacteristic(serviceCharacteristic);
+    }
+
+    @SuppressLint("MissingPermission")
+    public boolean readCharacteristic(UUID service, UUID characteristic) {
+        var serviceCharacteristic = getCharacteristic(service, characteristic);
+        if (serviceCharacteristic == null) {
+            Log.e(TAG, "characteristic not found!");
+            return false;
+        }
+        return bluetoothGatt.readCharacteristic(serviceCharacteristic);
     }
 
     public BluetoothGattCharacteristic getCharacteristic(UUID service, UUID characteristic) {

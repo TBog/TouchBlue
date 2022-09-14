@@ -134,7 +134,12 @@ public class ServicesFragment extends Fragment {
                 entry.writeCharacteristic(serviceUUID, characteristicUUID, 0x0);
         } else if ((gattCharacteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
             var text = gattCharacteristic.getStringValue(0);
-            Toast.makeText(getContext(), String.valueOf(text), Toast.LENGTH_SHORT).show();
+            if (text == null) {
+                Toast.makeText(getContext(), "Value not read yet. Reading now...", Toast.LENGTH_SHORT).show();
+                entry.readCharacteristic(serviceUUID, characteristicUUID);
+            } else {
+                Toast.makeText(getContext(), text, Toast.LENGTH_SHORT).show();
+            }
         } else {
             Toast.makeText(getContext(), "can't read or write", Toast.LENGTH_SHORT).show();
         }
