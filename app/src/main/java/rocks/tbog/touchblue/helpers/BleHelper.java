@@ -63,7 +63,7 @@ public class BleHelper {
             return;
         }
         var device = entry.getScanResult().getDevice();
-        entry.bluetoothGatt = device.connectGatt(ctx, false, entry.getCallback());
+        device.connectGatt(ctx, false, entry.getCallback());
     }
 
 }

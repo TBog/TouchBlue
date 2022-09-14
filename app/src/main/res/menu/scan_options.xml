@@ -6,7 +6,7 @@
         android:icon="@drawable/ic_search"
         android:orderInCategory="100"
         android:title="@string/action_scan"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/action_scan_off"
         android:icon="@drawable/ic_search_off"

@@ -1,6 +1,7 @@
 package rocks.tbog.touchblue;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -16,6 +17,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -140,6 +142,14 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        boolean isScanning = mScan != null && mScan.isScanning();
+        if (isScanning)
+            mScan.stopScan(getBaseContext());
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.scan_options, menu);
@@ -158,7 +168,7 @@ public class ScanActivity extends AppCompatActivity {
                                     mScan.stopScan(getBaseContext());
                                     invalidateOptionsMenu();
                                 }
-                            }, 10 * 1000);
+                            }, 30 * 1000);
                         } else {
                             Toast.makeText(ScanActivity.this, "Can't start scanning, check permissions!", Toast.LENGTH_SHORT).show();
                         }
@@ -177,11 +187,14 @@ public class ScanActivity extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         boolean isScanning = mScan != null && mScan.isScanning();
         menu.findItem(R.id.action_scan).setVisible(!isScanning);
         menu.findItem(R.id.action_scan_off).setVisible(isScanning);
+        if (menu instanceof MenuBuilder)
+            ((MenuBuilder) menu).setOptionalIconsVisible(true);
         return super.onPrepareOptionsMenu(menu);
     }
 

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                R.id.nav_home, R.id.nav_services, R.id.nav_slideshow)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -68,11 +69,13 @@ public class MainActivity extends AppCompatActivity {
 
                     appData.setBleEntryList(Collections.singletonList(entry));
                     BleHelper.connect(getBaseContext(), entry);
+                    binding.appBarMain.debugText.setText("Connecting to " + entry.getAddress());
                 }
             }
         });
 
         appData = new ViewModelProvider(this).get(AppViewModel.class);
+        appData.getBleEntryList().observe(this, bleEntries -> invalidateOptionsMenu());
         Log.i(TAG, appData.toString());
     }
 
@@ -105,15 +108,27 @@ public class MainActivity extends AppCompatActivity {
             binding.appBarMain.debugText.setText("Ready to scan for devices");
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        menu.findItem(R.id.action_settings).setOnMenuItemClickListener(item -> {
-//            return true;
-//        });
-//        return true;
-//    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        menu.findItem(R.id.action_reconnect).setOnMenuItemClickListener(item -> {
+            var list = appData.getBleEntryList().getValue();
+            if (list == null || list.isEmpty())
+                return true;
+            var entry = list.get(0);
+            BleHelper.connect(getBaseContext(), entry);
+            return true;
+        });
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        var list = appData.getBleEntryList().getValue();
+        menu.findItem(R.id.action_reconnect).setVisible(list != null && !list.isEmpty());
+        return super.onPrepareOptionsMenu(menu);
+    }
 
     @Override
     public boolean onSupportNavigateUp() {
