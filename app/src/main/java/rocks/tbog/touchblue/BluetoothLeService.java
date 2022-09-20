@@ -163,9 +163,8 @@ public class BluetoothLeService extends Service {
         var contentIntent = PendingIntent.getActivity(getApplicationContext(), 0,
                 new Intent(this, MainActivity.class),
                 PendingIntent.FLAG_IMMUTABLE);
-        var stopIntent = PendingIntent.getActivity(getApplicationContext(),
-                1,
-                new Intent(this, MainActivity.class)
+        var stopIntent = PendingIntent.getService(this,
+                1, new Intent(this, BluetoothLeService.class)
                         .setAction(ACTION_STOP_SERVICE),
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
