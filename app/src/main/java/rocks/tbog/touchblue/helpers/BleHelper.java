@@ -1,10 +1,13 @@
 package rocks.tbog.touchblue.helpers;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.companion.BluetoothDeviceFilter;
 import android.content.Context;
@@ -14,9 +17,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
+import rocks.tbog.touchblue.BleDeviceWrapper;
 import rocks.tbog.touchblue.BleEntry;
 
 public class BleHelper {
@@ -60,18 +66,24 @@ public class BleHelper {
         return bleScan;
     }
 
-    public static void connect(Context ctx, BleEntry entry) {
-        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(ctx, "Permission needed", Toast.LENGTH_SHORT).show();
-            return;
+    @SuppressLint("MissingPermission")
+    @NonNull
+    public static String getName(@NonNull ScanResult result) {
+        final var scanRec = result.getScanRecord();
+        final var dev = result.getDevice();
+        String name = scanRec.getDeviceName();
+        if (name == null || name.isEmpty()) {
+            //if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED)
+            name = dev.getName();
         }
-        var device = entry.getScanResult().getDevice();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // starting with SDK 27 we can set the thread of the callback using a handler
-            device.connectGatt(ctx, false, entry.getCallback(), BluetoothDevice.TRANSPORT_AUTO, BluetoothDevice.PHY_LE_1M_MASK, new Handler(Looper.getMainLooper()));
-        } else {
-            device.connectGatt(ctx, false, entry.getCallback());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (name == null || name.isEmpty()) {
+                name = dev.getAlias();
+            }
         }
+        if (name == null || name.isEmpty()) {
+            name = "-";
+        }
+        return name;
     }
-
 }

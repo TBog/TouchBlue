@@ -96,9 +96,9 @@ public class ScanActivity extends AppCompatActivity {
         binding.list.setAdapter(adapter);
         binding.list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
 
-        adapter.setOnItemClickListener((entry, position) -> {
+        adapter.setOnItemClickListener((scanResult, position) -> {
             var data = new Intent();
-            data.putExtra(SCAN_RESULT, entry.getScanResult());
+            data.putExtra(SCAN_RESULT, scanResult);
             setResult(RESULT_OK, data);
             finish();
         });

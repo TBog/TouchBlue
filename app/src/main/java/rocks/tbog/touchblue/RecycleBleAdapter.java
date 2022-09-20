@@ -1,6 +1,7 @@
 package rocks.tbog.touchblue;
 
 import android.Manifest;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -19,11 +20,11 @@ import java.util.Collection;
 
 public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Holder> {
     @NonNull
-    private final ArrayList<BleEntry> list = new ArrayList<>();
+    private final ArrayList<ScanResult> list = new ArrayList<>();
     private OnItemClickListener mItemClickListener = null;
 
     interface OnItemClickListener {
-        void onClick(BleEntry entry, int position);
+        void onClick(ScanResult scanResult, int position);
     }
 
     public RecycleBleAdapter() {
@@ -41,11 +42,11 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
 
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
-        var entry = list.get(position);
-        holder.setContent(entry);
+        var scanResult = list.get(position);
+        holder.setContent(scanResult);
         holder.btnConnect.setOnClickListener(v -> {
             if (mItemClickListener != null)
-                mItemClickListener.onClick(entry, position);
+                mItemClickListener.onClick(scanResult, position);
         });
     }
 
@@ -56,10 +57,10 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
 
     @Override
     public long getItemId(int position) {
-        return position < list.size() ? list.get(position).getAddress().hashCode() : -1;
+        return position < list.size() ? list.get(position).getDevice().getAddress().hashCode() : -1;
     }
 
-    public void setItems(Collection<BleEntry> collection) {
+    public void setItems(Collection<ScanResult> collection) {
         list.clear();
         list.addAll(collection);
         notifyDataSetChanged();
@@ -85,8 +86,7 @@ public class RecycleBleAdapter extends RecyclerView.Adapter<RecycleBleAdapter.Ho
             btnConnect = itemView.findViewById(R.id.btn_connect);
         }
 
-        public void setContent(BleEntry entry) {
-            var scanResult = entry.getScanResult();
+        public void setContent(ScanResult scanResult) {
 //            if (scanResult == null) {
 //                deviceName.setText("-");
 //                deviceMac.setText("-");

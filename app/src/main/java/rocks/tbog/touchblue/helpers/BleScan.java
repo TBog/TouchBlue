@@ -16,7 +16,6 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import rocks.tbog.touchblue.BleEntry;
@@ -25,8 +24,8 @@ public class BleScan {
     private static final String TAG = BleScan.class.getSimpleName();
     private final BluetoothLeScanner mScanner;
     private boolean mIsScanning = false;
-    private final MutableLiveData<List<BleEntry>> mEntryLiveData = new MutableLiveData<>(Collections.emptyList());
-    private final ArrayList<BleEntry> mList = new ArrayList<>(0);
+    private final MutableLiveData<List<ScanResult>> mEntryLiveData = new MutableLiveData<>(Collections.emptyList());
+    private final ArrayList<ScanResult> mList = new ArrayList<>(0);
     private final ScanCallback mScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
@@ -65,18 +64,17 @@ public class BleScan {
         mIsScanning = true;
 
         // check if the same address already found
-        for (Iterator<BleEntry> iterator = mList.iterator(); iterator.hasNext(); ) {
-            BleEntry entry = iterator.next();
-            if (entry.equalsResult(result)) {
+        for (var iterator = mList.iterator(); iterator.hasNext(); ) {
+            var entry = iterator.next();
+            if (entry.getDevice().getAddress().equals(result.getDevice().getAddress())) {
                 iterator.remove();
                 break;
             }
         }
 
-        BleEntry bleEntry = new BleEntry(result);
-        mList.add(bleEntry);
+        mList.add(result);
 
-        Collections.sort(mList, (o1, o2) -> o1.getAddress().compareToIgnoreCase(o2.getAddress()));
+        Collections.sort(mList, (o1, o2) -> o1.getDevice().getAddress().compareToIgnoreCase(o2.getDevice().getAddress()));
 
         // notify live data of the changed list
         mEntryLiveData.postValue(mList);
@@ -94,7 +92,7 @@ public class BleScan {
         return mIsScanning;
     }
 
-    public LiveData<List<BleEntry>> getScanList() {
+    public LiveData<List<ScanResult>> getScanList() {
         return mEntryLiveData;
     }
 }
