@@ -2,6 +2,7 @@ package rocks.tbog.touchblue;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
@@ -31,7 +32,10 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.UUID;
+
 import rocks.tbog.touchblue.databinding.ActivityMainBinding;
+import rocks.tbog.touchblue.ui.scanner.ScanActivity;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "BL_main";
@@ -65,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_slideshow)
+                R.id.nav_home, R.id.nav_device_settings)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -78,14 +82,8 @@ public class MainActivity extends AppCompatActivity {
                 var extras = data != null ? data.getExtras() : null;
                 var scanResult = extras != null ? extras.getParcelable(ScanActivity.SCAN_RESULT) : null;
                 if (scanResult instanceof ScanResult) {
-                    var address = ((ScanResult) scanResult).getDevice().getAddress();
-                    appData.addConnection((ScanResult) scanResult);
-                    sendConnectAction(address);
-//                    var entry = new BleEntry((ScanResult) scanResult);
-//
-//                    appData.setBleEntryList(Collections.singletonList(entry));
-//                    BleHelper.connect(getBaseContext(), entry);
-//                    binding.appBarMain.debugText.setText("Connecting to " + entry.getAddress());
+                    var bleSensor = appData.addConnection((ScanResult) scanResult);
+                    sendConnectAction(bleSensor);
                 }
             }
         });
@@ -94,8 +92,17 @@ public class MainActivity extends AppCompatActivity {
         appData.getBleEntryList().observe(this, bleEntries -> invalidateOptionsMenu());
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothLeService.ACTION_STOP_SERVICE);
+        filter.addAction(BleSensorService.ACTION_STOP_SERVICE);
+        filter.addAction(BleSensorService.ACTION_GATT_CONNECTED);
+        filter.addAction(BleSensorService.ACTION_GATT_DISCONNECTED);
+        filter.addAction(BleSensorService.ACTION_GATT_SERVICES_DISCOVERED);
+        filter.addAction(BleSensorService.ACTION_DATA_CHANGED);
         registerReceiver(receiver, filter);
+
+        if (foregroundServiceRunning()) {
+            var i = new Intent(BleSensorService.ACTION_REQUEST_DATA);
+            sendIntentToService(i);
+        }
     }
 
     @Override
@@ -104,9 +111,10 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void sendConnectAction(String address) {
-        var i = new Intent(BluetoothLeService.ACTION_CONNECT_TO);
-        i.putExtra(BluetoothLeService.EXTRA_ADDRESS, address);
+    private void sendConnectAction(BleSensor bleSensor) {
+        var i = new Intent(BleSensorService.ACTION_CONNECT_TO);
+        i.putExtra(BleSensorService.EXTRA_ADDRESS, bleSensor.getAddress());
+        i.putExtra(BleSensorService.EXTRA_DEVICE_NAME, bleSensor.getName());
         sendIntentToService(i);
     }
 
@@ -117,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         {
             var ctx = getBaseContext();
             var i = new Intent(intent);
-            i.setComponent(new ComponentName(ctx, BluetoothLeService.class));
+            i.setComponent(new ComponentName(ctx, BleSensorService.class));
             ContextCompat.startForegroundService(ctx, i);
         }
     }
@@ -148,12 +156,12 @@ public class MainActivity extends AppCompatActivity {
             binding.appBarMain.debugText.setText("Ready to scan for devices");
 
         var action = getIntent() != null ? getIntent().getAction() : null;
-        if (BluetoothLeService.ACTION_STOP_SERVICE.equals(action)) {
+        if (BleSensorService.ACTION_STOP_SERVICE.equals(action)) {
             if (foregroundServiceRunning()) {
                 Log.i(TAG, "stop service");
                 var ctx = getBaseContext();
-                var i = new Intent(ctx, BluetoothLeService.class);
-                i.setAction(BluetoothLeService.ACTION_STOP_SERVICE);
+                var i = new Intent(ctx, BleSensorService.class);
+                i.setAction(BleSensorService.ACTION_STOP_SERVICE);
                 ctx.stopService(i);
             }
         } else {
@@ -161,8 +169,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "service already running");
             } else {
                 var ctx = getBaseContext();
-                var i = new Intent(ctx, BluetoothLeService.class);
-                i.setAction(BluetoothLeService.ACTION_START_SERVICE);
+                var i = new Intent(ctx, BleSensorService.class);
+                i.setAction(BleSensorService.ACTION_START_SERVICE);
                 ContextCompat.startForegroundService(ctx, i);
             }
         }
@@ -182,21 +190,21 @@ public class MainActivity extends AppCompatActivity {
         menu.findItem(R.id.action_start_service).setOnMenuItemClickListener(item -> {
             if (!foregroundServiceRunning()) {
                 var ctx = getBaseContext();
-                var i = new Intent(ctx, BluetoothLeService.class);
-                i.setAction(BluetoothLeService.ACTION_START_SERVICE);
+                var i = new Intent(ctx, BleSensorService.class);
+                i.setAction(BleSensorService.ACTION_START_SERVICE);
                 ContextCompat.startForegroundService(ctx, i);
             }
             return true;
         });
         menu.findItem(R.id.action_stop_service).setOnMenuItemClickListener(item -> {
             var ctx = getBaseContext();
-            var i = new Intent(ctx, BluetoothLeService.class);
-            i.setAction(BluetoothLeService.ACTION_STOP_SERVICE);
+            var i = new Intent(ctx, BleSensorService.class);
+            i.setAction(BleSensorService.ACTION_STOP_SERVICE);
             ctx.stopService(i);
             return true;
         });
         menu.findItem(R.id.action_test).setOnMenuItemClickListener(item -> {
-            sendConnectAction("20:E4:63:15:BD:03");
+            sendConnectAction(new BleSensor("20:E4:63:15:BD:03", "LED"));
             return true;
         }).setTitle("20:E4:63:15:BD:03");
         return true;
@@ -220,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean foregroundServiceRunning() {
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (var service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
-            if (BluetoothLeService.class.getName().equals(service.service.getClassName())) {
+            if (BleSensorService.class.getName().equals(service.service.getClassName())) {
                 return true;
             }
         }
@@ -232,21 +240,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void executeAction(@Nullable String action, @Nullable Bundle extras) {
-        if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-            String address = extras != null ? extras.getString(BluetoothLeService.EXTRA_ADDRESS) : null;
-            var entry = appData.addConnection(address);
+        if (BleSensorService.ACTION_GATT_CONNECTED.equals(action)) {
+            String address = extras != null ? extras.getString(BleSensorService.EXTRA_ADDRESS) : null;
+            String devName = extras != null ? extras.getString(BleSensorService.EXTRA_DEVICE_NAME) : null;
+            var entry = appData.addConnection(address, devName);
             entry.setConnected(true);
         }
-        if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-            String address = extras != null ? extras.getString(BluetoothLeService.EXTRA_ADDRESS) : null;
-            var entry = appData.addConnection(address);
+        if (BleSensorService.ACTION_GATT_DISCONNECTED.equals(action)) {
+            String address = extras != null ? extras.getString(BleSensorService.EXTRA_ADDRESS) : null;
+            String devName = extras != null ? extras.getString(BleSensorService.EXTRA_DEVICE_NAME) : null;
+            var entry = appData.addConnection(address, devName);
             entry.setConnected(false);
         }
-        if (BluetoothLeService.ACTION_STOP_SERVICE.equals(action)) {
+        if (BleSensorService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+            var gattServices = extras != null ? extras.getParcelableArray(BleSensorService.EXTRA_GATT_SERVICES) : null;
+            if (gattServices != null) {
+                for (var service : gattServices) {
+                    if (service instanceof BluetoothGattService)
+                        appData.updateServiceAndCharacteristics((BluetoothGattService) service);
+                }
+            }
+        }
+        if (BleSensorService.ACTION_STOP_SERVICE.equals(action)) {
             var ctx = getBaseContext();
-            var i = new Intent(ctx, BluetoothLeService.class);
-            i.setAction(BluetoothLeService.ACTION_STOP_SERVICE);
+            var i = new Intent(ctx, BleSensorService.class);
+            i.setAction(BleSensorService.ACTION_STOP_SERVICE);
             ctx.stopService(i);
+        }
+        if (BleSensorService.ACTION_DATA_CHANGED.equals(action)) {
+            String address = null;
+            Object data = null;
+            UUID characteristicUUID = null;
+            UUID serviceUUID = null;
+            if (extras != null) {
+                address = extras.getString(BleSensorService.EXTRA_ADDRESS);
+                data = extras.get(BleSensorService.EXTRA_DATA);
+                var uuid = extras.getSerializable(BleSensorService.EXTRA_DATA_UUID);
+                if (uuid instanceof UUID)
+                    characteristicUUID = (UUID) uuid;
+                uuid = extras.getSerializable(BleSensorService.EXTRA_SERVICE_UUID);
+                if (uuid instanceof UUID)
+                    serviceUUID = (UUID) uuid;
+            }
+            if (characteristicUUID != null) {
+                var sensor = appData.findSensor(address);
+                if (sensor == null)
+                    sensor = appData.addConnection(address, null);
+                sensor.setData(characteristicUUID, data);
+
+                if (serviceUUID != null) {
+                    appData.updateCharacteristic(serviceUUID, characteristicUUID);
+                    Log.d(TAG, characteristicUUID + " value=" + data);
+                }
+            }
         }
     }
 }

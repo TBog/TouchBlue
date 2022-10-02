@@ -1,29 +1,17 @@
 package rocks.tbog.touchblue.helpers;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.companion.BluetoothDeviceFilter;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
-
-import rocks.tbog.touchblue.BleDeviceWrapper;
-import rocks.tbog.touchblue.BleEntry;
 
 public class BleHelper {
     private static final String TAG = BleHelper.class.getSimpleName();

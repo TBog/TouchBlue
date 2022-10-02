@@ -1,6 +1,7 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.TouchBlue" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorAccent">@color/teal_200</item>
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
@@ -13,6 +14,11 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- List divider -->
         <item name="android:listDivider">@color/gray</item>
+        <!-- Action Mode -->
+        <item name="android:actionModeStyle">@style/Theme.TouchBlue.PopupOverlay</item>
+        <!-- Testing context menu, WIP -->
+        <item name="textAppearanceLargePopupMenu">@style/Theme.TouchBlue.ContextMenu.TextAppearance</item>
+        <item name="textAppearanceSmallPopupMenu">@style/Theme.TouchBlue.ContextMenu.TextAppearance</item>
     </style>
 
     <style name="Theme.TouchBlue.NoActionBar">
@@ -23,4 +29,9 @@
     <style name="Theme.TouchBlue.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.TouchBlue.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Theme.TouchBlue.ContextMenu.TextAppearance" parent="TextAppearance.AppCompat.Menu">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+    </style>
+
 </resources>

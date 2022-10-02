@@ -11,8 +11,15 @@
         android:orderInCategory="101"
         android:title="Disconnect" />
     <item
-        android:id="@+id/action_debug"
-        android:icon="@drawable/ic_menu_slideshow"
+        android:id="@+id/action_toggle"
         android:orderInCategory="102"
         android:title="Toggle LED" />
+    <item
+        android:id="@+id/action_set_brightness"
+        android:orderInCategory="103"
+        android:title="LED brightness" />
+    <item
+        android:id="@+id/action_set_saturation"
+        android:orderInCategory="104"
+        android:title="LED saturation" />
 </menu>

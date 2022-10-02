@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="accel_range_entries">
+        <item>2g</item>
+        <item>4g</item>
+        <item>8g</item>
+        <item>16g</item>
+    </string-array>
+    <string-array name="accel_range_values" translatable="false">
+        <item>2</item>
+        <item>4</item>
+        <item>8</item>
+        <item>16</item>
+    </string-array>
+    <string-array name="accel_bandwidth_entries">
+        <item>50Hz</item>
+        <item>100Hz</item>
+        <item>200Hz</item>
+        <item>400Hz</item>
+    </string-array>
+    <string-array name="accel_bandwidth_values" translatable="false">
+        <item>50</item>
+        <item>100</item>
+        <item>200</item>
+        <item>400</item>
+    </string-array>
+    <string-array name="accel_sample_rate_entries">
+        <item>13Hz</item>
+        <item>26Hz</item>
+        <item>52Hz</item>
+        <item>104Hz</item>
+        <item>208Hz</item>
+        <item>416Hz</item>
+        <item>833Hz</item>
+        <item>1660Hz</item>
+        <item>3330Hz</item>
+        <item>6660Hz</item>
+        <item>13330Hz</item>
+    </string-array>
+    <string-array name="accel_sample_rate_values" translatable="false">
+        <item>13</item>
+        <item>26</item>
+        <item>52</item>
+        <item>104</item>
+        <item>208</item>
+        <item>416</item>
+        <item>833</item>
+        <item>1660</item>
+        <item>3330</item>
+        <item>6660</item>
+        <item>13330</item>
+    </string-array>
+</resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:paddingStart="?android:attr/expandableListPreferredItemPaddingLeft"
+    android:paddingTop="2dip"
+    android:paddingBottom="2dip">
+
+    <TextView
+        android:id="@android:id/text1"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="6dip"
+        android:textAlignment="viewStart"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        app:layout_constraintBottom_toTopOf="@android:id/text2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@tools:sample/cities" />
+
+    <TextView
+        android:id="@android:id/text2"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_below="@android:id/text1"
+        android:layout_alignStart="@android:id/text1"
+        android:textAlignment="viewStart"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@android:id/text1"
+        tools:text="@tools:sample/cities" />
+
+    <ImageButton
+        android:id="@+id/btn_download"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_margin="5dp"
+        android:contentDescription="download"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_upload"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_download" />
+
+    <ImageButton
+        android:id="@+id/btn_upload"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_margin="5dp"
+        android:contentDescription="upload"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_upload" />
+</androidx.constraintlayout.widget.ConstraintLayout>

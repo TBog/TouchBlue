@@ -7,8 +7,7 @@
     <string name="nav_header_desc">Navigation header</string>
 
     <string name="menu_home">Home</string>
-    <string name="menu_services">Services</string>
-    <string name="menu_slideshow">Slideshow</string>
+    <string name="menu_device_settings">Device settings</string>
     <string name="error_no_blt_le">Your device does not have Bluetooth Low Energy</string>
     <string name="fab_search">Search for device</string>
     <string name="connect">Connect to device</string>

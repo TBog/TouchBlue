@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import rocks.tbog.touchblue.BleEntry;
-
 public class BleScan {
     private static final String TAG = BleScan.class.getSimpleName();
     private final BluetoothLeScanner mScanner;

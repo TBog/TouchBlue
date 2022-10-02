@@ -19,18 +19,20 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-
-import rocks.tbog.touchblue.helpers.BleHelper;
 
 public class BleDeviceWrapper {
     private static final String TAG = BleDeviceWrapper.class.getSimpleName();
 
     @NonNull
     private final BluetoothDevice device;
-    private final String name;
+    private String name;
     private BluetoothGatt bluetoothGatt = null;
+    private HashMap<UUID, BluetoothGattCharacteristic> mCharacteristics = null;
+    private final HashMap<UUID, OnCharacteristicCallback> mCallbackOnRead = new HashMap<>();
     private GattCallback internalCallback = null;
     private BluetoothGattCallback gattCallback = null;
     private int mConnectionState = STATE_DISCONNECTED;
@@ -41,9 +43,8 @@ public class BleDeviceWrapper {
 
     public List<BluetoothGattService> services = null;
 
-    public BleDeviceWrapper(@NonNull ScanResult result) {
-        device = result.getDevice();
-        name = BleHelper.getName(result);
+    interface OnCharacteristicCallback {
+        void onCharacteristicCallback(BluetoothGattCharacteristic characteristic, int status);
     }
 
     public BleDeviceWrapper(@NonNull BluetoothDevice bluetoothDevice) {
@@ -53,6 +54,10 @@ public class BleDeviceWrapper {
 
     public String getAddress() {
         return device.getAddress();
+    }
+
+    public void setName(String deviceName) {
+        name = deviceName;
     }
 
     public String getName() {
@@ -77,6 +82,7 @@ public class BleDeviceWrapper {
         if (bluetoothGatt != null && bluetoothGatt.connect()) {
             Log.i(TAG, "re-connected to " + getAddress());
             mConnectionState = STATE_CONNECTED;
+            mCharacteristics = null;
             return bluetoothGatt;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -88,26 +94,35 @@ public class BleDeviceWrapper {
         } else {
             bluetoothGatt = device.connectGatt(ctx, false, getInternalCallback());
         }
+        mCharacteristics = null;
         mConnectionState = STATE_CONNECTING;
         return bluetoothGatt;
     }
 
     @SuppressLint("MissingPermission")
     public void disconnect() {
-        if (bluetoothGatt == null)
-            Log.w(TAG, "disconnect called but we're not connected " + getAddress());
         if (mConnectionState == STATE_DISCONNECTED)
             Log.w(TAG, "disconnect called when state disconnected " + getAddress());
-        bluetoothGatt.disconnect();
+
+        if (bluetoothGatt == null)
+            Log.w(TAG, "disconnect called but we're not connected " + getAddress());
+        else
+            bluetoothGatt.disconnect();
+
+        mCharacteristics = null;
     }
 
     @SuppressLint("MissingPermission")
     public void close() {
-        if (bluetoothGatt == null)
-            Log.w(TAG, "close called but we're not connected " + getAddress());
         if (mConnectionState == STATE_DISCONNECTED)
             Log.w(TAG, "close called when state disconnected " + getAddress());
-        bluetoothGatt.close();
+
+        if (bluetoothGatt == null)
+            Log.w(TAG, "close called but we're not connected " + getAddress());
+        else
+            bluetoothGatt.close();
+
+        mCharacteristics = null;
     }
 
     public boolean equalsResult(ScanResult result) {
@@ -124,21 +139,32 @@ public class BleDeviceWrapper {
     }
 
     @SuppressLint("MissingPermission")
-    public boolean writeCharacteristic(UUID service, UUID characteristic, int newValue) {
-        var serviceCharacteristic = getCharacteristic(service, characteristic);
+    protected boolean writeCharacteristic(BluetoothGattCharacteristic serviceCharacteristic, int newValue, int formatType) {
+        //check mBluetoothGatt is available
+        if (bluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return false;
+        }
         if (serviceCharacteristic == null) {
             Log.e(TAG, "characteristic not found!");
             return false;
         }
-
-        byte[] value = new byte[1];
-        value[0] = (byte) (newValue & 0xFF);
-        serviceCharacteristic.setValue(value);
+        serviceCharacteristic.setValue(newValue, formatType, 0);
         return bluetoothGatt.writeCharacteristic(serviceCharacteristic);
+    }
+
+    public boolean writeCharacteristic(UUID service, UUID characteristic, int newValue, int formatType) {
+        var serviceCharacteristic = getCharacteristic(service, characteristic);
+        return writeCharacteristic(serviceCharacteristic, newValue, formatType);
     }
 
     @SuppressLint("MissingPermission")
     public boolean readCharacteristic(UUID service, UUID characteristic) {
+        //check mBluetoothGatt is available
+        if (bluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return false;
+        }
         var serviceCharacteristic = getCharacteristic(service, characteristic);
         if (serviceCharacteristic == null) {
             Log.e(TAG, "characteristic not found!");
@@ -147,6 +173,68 @@ public class BleDeviceWrapper {
         return bluetoothGatt.readCharacteristic(serviceCharacteristic);
     }
 
+    @SuppressLint("MissingPermission")
+    public boolean readCharacteristic(UUID characteristic, OnCharacteristicCallback callback) {
+        //check mBluetoothGatt is available
+        if (bluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return false;
+        }
+        var serviceCharacteristic = getCachedCharacteristic(characteristic);
+        if (serviceCharacteristic == null) {
+            Log.e(TAG, "characteristic not found");
+            return false;
+        }
+        mCallbackOnRead.put(characteristic, callback);
+        return bluetoothGatt.readCharacteristic(serviceCharacteristic);
+    }
+
+    private void generateCharacteristicCache() {
+        // cache all characteristics
+        if (mCharacteristics != null) {
+            return;
+        }
+        var gattServices = bluetoothGatt.getServices();
+        if (!gattServices.isEmpty()) {
+            mCharacteristics = new HashMap<>();
+            for (var service : gattServices) {
+                var characteristics = service.getCharacteristics();
+                for (var characteristic : characteristics) {
+                    mCharacteristics.put(characteristic.getUuid(), characteristic);
+                }
+            }
+        }
+    }
+
+    @Nullable
+    public Collection<BluetoothGattCharacteristic> getCachedCharacteristics() {
+        //check mBluetoothGatt is available
+        if (bluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return null;
+        }
+        generateCharacteristicCache();
+        return mCharacteristics != null ? mCharacteristics.values() : null;
+    }
+
+    /**
+     * Will return the last characteristic found with the provided UUID
+     *
+     * @param characteristicUUID the UUID of the desired characteristic
+     * @return null if not found
+     */
+    @Nullable
+    public BluetoothGattCharacteristic getCachedCharacteristic(UUID characteristicUUID) {
+        //check mBluetoothGatt is available
+        if (bluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return null;
+        }
+        generateCharacteristicCache();
+        return mCharacteristics != null ? mCharacteristics.get(characteristicUUID) : null;
+    }
+
+    @Nullable
     public BluetoothGattCharacteristic getCharacteristic(UUID service, UUID characteristic) {
         //check mBluetoothGatt is available
         if (bluetoothGatt == null) {
@@ -232,6 +320,9 @@ public class BleDeviceWrapper {
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            var onReadCB = mEntry.mCallbackOnRead.remove(characteristic.getUuid());
+            if (onReadCB != null)
+                onReadCB.onCharacteristicCallback(characteristic, status);
             if (mEntry.gattCallback != null)
                 mEntry.gattCallback.onCharacteristicRead(gatt, characteristic, status);
         }
