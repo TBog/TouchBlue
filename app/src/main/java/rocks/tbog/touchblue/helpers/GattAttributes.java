@@ -26,15 +26,18 @@ import java.util.UUID;
  */
 public class GattAttributes {
     private static final HashMap<UUID, String> attributes = new HashMap<>();
-    public static String HEART_RATE_MEASUREMENT = "00002a37-0000-1000-8000-00805f9b34fb";
-    public static String SERVICE_LED = "54B10000-5442-6f67-9000-cc505effcd37";
-    public static String LED_SWITCH = "54B10001-5442-6f67-9000-cc505effcd37";
-    public static String LED_BRIGHTNESS = "54B10002-5442-6f67-9000-cc505effcd37";
-    public static String LED_SATURATION = "54B10003-5442-6f67-9000-cc505effcd37";
-    public static String SERVICE_ACCEL = "54B20000-5442-6f67-9000-cc505effcd37";
-    public static String ACCEL_RANGE = "54B10004-5442-6f67-9000-cc505effcd37";
-    public static String ACCEL_BANDWIDTH = "54B10005-5442-6f67-9000-cc505effcd37";
-    public static String ACCEL_SAMPLE_RATE = "54B10006-5442-6f67-9000-cc505effcd37";
+    public static final String CCCD = "00002902-0000-1000-8000-00805f9b34fb";
+    public static final String HEART_RATE_MEASUREMENT = "00002a37-0000-1000-8000-00805f9b34fb";
+    public static final String SERVICE_LED = "54B10000-5442-6f67-9000-cc505effcd37";
+    public static final String LED_SWITCH = "54B10001-5442-6f67-9000-cc505effcd37";
+    public static final String LED_BRIGHTNESS = "54B10002-5442-6f67-9000-cc505effcd37";
+    public static final String LED_SATURATION = "54B10003-5442-6f67-9000-cc505effcd37";
+    public static final String SERVICE_ACCEL = "54B20000-5442-6f67-9000-cc505effcd37";
+    public static final String ACCEL_RANGE = "54B10004-5442-6f67-9000-cc505effcd37";
+    public static final String ACCEL_BANDWIDTH = "54B10005-5442-6f67-9000-cc505effcd37";
+    public static final String ACCEL_SAMPLE_RATE = "54B10006-5442-6f67-9000-cc505effcd37";
+    public static final String TAP_COUNT = "54B10007-5442-6f67-9000-cc505effcd37";
+    public static final String GAME_STATE = "54B10008-5442-6F67-9000-CC505EFFCD37";
 
     static {
         // Sample Services.
@@ -68,6 +71,8 @@ public class GattAttributes {
         addAttribute(ACCEL_RANGE, "Accel range"); // 2g, 4g, 8g, 16g
         addAttribute(ACCEL_BANDWIDTH, "Accel bandwidth"); // (Hz) 50, 100, 200, 400
         addAttribute(ACCEL_SAMPLE_RATE, "Accel sample rate"); // (Hz) 13,26,52,104,208,416,833,1660,3330,6660,13330
+        addAttribute(TAP_COUNT, "tap count");
+        addAttribute(GAME_STATE, "game state");
     }
 
     public static void addAttribute(@NonNull final String uuidString, @NonNull final String name) {

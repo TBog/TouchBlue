@@ -76,6 +76,18 @@ public class HomeFragment extends Fragment {
                 .setOnMenuItemClickListener(item -> changeLedSetting(entry, BleSensorService.UUID_LED_BRIGHTNESS));
         menu.findItem(R.id.action_set_saturation)
                 .setOnMenuItemClickListener(item -> changeLedSetting(entry, BleSensorService.UUID_LED_SATURATION));
+        menu.findItem(R.id.action_game_start).setOnMenuItemClickListener(item -> {
+            var i = new Intent(BleSensorService.ACTION_START_GAME);
+            i.putExtra(BleSensorService.EXTRA_ADDRESS, entry.getAddress());
+            sendIntentToService(i);
+            return true;
+        });
+        menu.findItem(R.id.action_game_stop).setOnMenuItemClickListener(item -> {
+            var i = new Intent(BleSensorService.ACTION_STOP_GAME);
+            i.putExtra(BleSensorService.EXTRA_ADDRESS, entry.getAddress());
+            sendIntentToService(i);
+            return true;
+        });
     }
 
     @Override

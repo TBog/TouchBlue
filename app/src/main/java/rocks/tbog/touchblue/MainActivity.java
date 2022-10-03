@@ -293,6 +293,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, characteristicUUID + " value=" + data);
                 }
             }
+            /*if (BleSensorService.UUID_TAP_COUNT.equals(characteristicUUID)) {
+                appData.setTapCount();
+            }*/
         }
     }
 }

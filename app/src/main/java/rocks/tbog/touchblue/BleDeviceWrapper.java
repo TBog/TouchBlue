@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import rocks.tbog.touchblue.helpers.GattAttributes;
+
 public class BleDeviceWrapper {
     private static final String TAG = BleDeviceWrapper.class.getSimpleName();
 
@@ -187,6 +189,37 @@ public class BleDeviceWrapper {
         }
         mCallbackOnRead.put(characteristic, callback);
         return bluetoothGatt.readCharacteristic(serviceCharacteristic);
+    }
+
+    @SuppressLint("MissingPermission")
+    public boolean enableCharacteristicNotification(UUID characteristicUUID, boolean bEnable) {
+        //check mBluetoothGatt is available
+        if (bluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return false;
+        }
+        var characteristic = getCachedCharacteristic(characteristicUUID);
+        if (characteristic == null) {
+            Log.e(TAG, "characteristic not found");
+            return false;
+        }
+
+        if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
+            Log.e(TAG, "characteristic doesn't have notify property (" + characteristic.getProperties() + ")");
+            return false;
+        }
+
+        // enable notification callback
+        bluetoothGatt.setCharacteristicNotification(characteristic, bEnable);
+
+        // tell device that we're expecting notifications
+        var descriptor = characteristic.getDescriptor(UUID.fromString(GattAttributes.CCCD));
+        if (bEnable) {
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        } else {
+            descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+        }
+        return bluetoothGatt.writeDescriptor(descriptor);
     }
 
     private void generateCharacteristicCache() {

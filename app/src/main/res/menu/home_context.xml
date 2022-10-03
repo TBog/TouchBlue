@@ -22,4 +22,12 @@
         android:id="@+id/action_set_saturation"
         android:orderInCategory="104"
         android:title="LED saturation" />
+    <item
+        android:id="@+id/action_game_start"
+        android:orderInCategory="105"
+        android:title="Start game" />
+    <item
+        android:id="@+id/action_game_stop"
+        android:orderInCategory="106"
+        android:title="Stop game" />
 </menu>

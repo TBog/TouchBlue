@@ -33,10 +33,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import rocks.tbog.touchblue.games.Game;
+import rocks.tbog.touchblue.games.TouchGame;
+import rocks.tbog.touchblue.games.TouchGameService;
 import rocks.tbog.touchblue.helpers.GattAttributes;
 
 /**
@@ -49,8 +51,9 @@ public class BleSensorService extends Service {
     private static final String ONGOING_NOTIFICATION_CHANNEL = "ongoing";
 
     private BluetoothManager mBluetoothManager;
-    private final List<BleDeviceWrapper> mDevices = new ArrayList<>(0);
+    private final ArrayList<BleDeviceWrapper> mDevices = new ArrayList<>(0);
     private Handler mHandler;
+    private Game mGame = new Game();
 
     // broadcast/receiver actions
     public final static String ACTION_GATT_CONNECTED = "rocks.tbog.touchblue.ACTION_GATT_CONNECTED";
@@ -63,6 +66,8 @@ public class BleSensorService extends Service {
     public final static String ACTION_TOGGLE_LED = "rocks.tbog.touchblue.ACTION_TOGGLE_LED";
     public final static String ACTION_REQUEST_DATA = "rocks.tbog.touchblue.ACTION_REQUEST_DATA";
     public final static String ACTION_SET_DATA = "rocks.tbog.touchblue.ACTION_SET_DATA";
+    public final static String ACTION_START_GAME = "rocks.tbog.touchblue.ACTION_START_GAME";
+    public final static String ACTION_STOP_GAME = "rocks.tbog.touchblue.ACTION_STOP_GAME";
     // extra information sent
     public final static String EXTRA_DATA = "rocks.tbog.touchblue.EXTRA_DATA"; // characteristic value
     public final static String EXTRA_DATA_UUID = "rocks.tbog.touchblue.EXTRA_DATA_UUID"; // characteristic uuid
@@ -78,6 +83,8 @@ public class BleSensorService extends Service {
     public final static UUID UUID_ACCEL_RANGE = UUID.fromString(GattAttributes.ACCEL_RANGE);
     public final static UUID UUID_ACCEL_BANDWIDTH = UUID.fromString(GattAttributes.ACCEL_BANDWIDTH);
     public final static UUID UUID_ACCEL_SAMPLE_RATE = UUID.fromString(GattAttributes.ACCEL_SAMPLE_RATE);
+    public final static UUID UUID_TAP_COUNT = UUID.fromString(GattAttributes.TAP_COUNT);
+    public final static UUID UUID_GAME_STATE = UUID.fromString(GattAttributes.GAME_STATE);
 
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
@@ -94,10 +101,36 @@ public class BleSensorService extends Service {
                 broadcastUpdate(intentAction, gatt.getDevice());
         }
 
+        @SuppressLint("MissingPermission")
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED, gatt.getDevice());
+                var device = findDeviceByAddress(gatt.getDevice().getAddress());
+                if (device == null) {
+                    Log.e(TAG, "discovered services for unknown device");
+                    return;
+                }
+                mHandler.post(() -> {
+                    var ok = device.enableCharacteristicNotification(UUID_TAP_COUNT, true);
+                    if (ok)
+                        Log.d(TAG, "tap count notification enabled");
+                });
+
+//                for (var service : gatt.getServices()) {
+//                    for (var chara : service.getCharacteristics()) {
+//                        if ((chara.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0) {
+//
+//                            // enable notification callback
+//                            gatt.setCharacteristicNotification(chara, true);
+//
+//                            // tell device that we're expecting notifications
+//                            BluetoothGattDescriptor descriptor = chara.getDescriptor(UUID.fromString(GattAttributes.CCCD));
+//                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//                            gatt.writeDescriptor(descriptor);
+//                        }
+//                    }
+//                }
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -114,6 +147,10 @@ public class BleSensorService extends Service {
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            Log.d(TAG, "onCharacteristicChanged " + characteristic.getUuid());
+            // this is a characteristic notification
+            if (mGame.isStarted() && UUID_TAP_COUNT.equals(characteristic.getUuid()))
+                mGame.touch(gatt.getDevice().getAddress());
             broadcastUpdate(ACTION_DATA_CHANGED, gatt.getDevice(), characteristic);
         }
     };
@@ -289,6 +326,29 @@ public class BleSensorService extends Service {
                     broadcastUpdate(device, characteristic);
                 }
             }
+        } else if (ACTION_START_GAME.equals(action)) {
+            String address = extras != null ? extras.getString(EXTRA_ADDRESS) : null;
+            if (address == null && !mDevices.isEmpty())
+                address = mDevices.get(0).toString();
+            if (address != null)
+                startResponseTimeGame(address);
+        } else if (ACTION_STOP_GAME.equals(action)) {
+            mGame.stop();
+        }
+    }
+
+    public void setIntValue(@NonNull String address, @NonNull UUID characteristicUUID, int intData) {
+        for (var device : mDevices) {
+            if (!address.equals(device.getAddress()))
+                continue;
+            var characteristic = device.getCachedCharacteristic(characteristicUUID);
+            if (characteristic == null) {
+                Log.e(TAG, "characteristic `" + characteristicUUID + "` not found for device `" + device.getAddress() + "`");
+                continue;
+            }
+            var serviceUUID = characteristic.getService().getUuid();
+            device.writeCharacteristic(serviceUUID, characteristicUUID, intData, getCharacteristicFormat(characteristicUUID));
+            broadcastUpdate(device, characteristic);
         }
     }
 
@@ -354,6 +414,7 @@ public class BleSensorService extends Service {
             intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
         } else if (valueFormatType == BluetoothGattCharacteristic.FORMAT_UINT8 ||
                 valueFormatType == BluetoothGattCharacteristic.FORMAT_UINT16 ||
+                valueFormatType == BluetoothGattCharacteristic.FORMAT_SINT16 ||
                 valueFormatType == BluetoothGattCharacteristic.FORMAT_UINT32) {
             var data = characteristic.getIntValue(valueFormatType, 0);
             if (data != null) {
@@ -486,11 +547,22 @@ public class BleSensorService extends Service {
             device.close();
     }
 
+    protected void startResponseTimeGame(@NonNull String address) {
+        // stop previous game
+        mGame.stop();
+        // make new game
+        mGame = new TouchGame(mHandler, new TouchGameService(this, address));
+        // start playing
+        mGame.start();
+    }
+
     private static int getCharacteristicFormat(UUID characteristic) {
         if (UUID_ACCEL_BANDWIDTH.equals(characteristic)) {
             return BluetoothGattCharacteristic.FORMAT_UINT16;
         } else if (UUID_ACCEL_SAMPLE_RATE.equals(characteristic)) {
             return BluetoothGattCharacteristic.FORMAT_UINT16;
+        } else if (UUID_TAP_COUNT.equals(characteristic)) {
+            return BluetoothGattCharacteristic.FORMAT_SINT16;
         }
         return BluetoothGattCharacteristic.FORMAT_UINT8;
     }
