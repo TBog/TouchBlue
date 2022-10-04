@@ -76,16 +76,6 @@ public class BleSensorService extends Service {
     public final static String EXTRA_DEVICE_NAME = "rocks.tbog.touchblue.EXTRA_DEVICE_NAME";
     public final static String EXTRA_GATT_SERVICES = "rocks.tbog.touchblue.EXTRA_GATT_SERVICES";
 
-    public final static UUID UUID_HEART_RATE_MEASUREMENT = UUID.fromString(GattAttributes.HEART_RATE_MEASUREMENT);
-    public final static UUID UUID_LED_SWITCH = UUID.fromString(GattAttributes.LED_SWITCH);
-    public final static UUID UUID_LED_BRIGHTNESS = UUID.fromString(GattAttributes.LED_BRIGHTNESS);
-    public final static UUID UUID_LED_SATURATION = UUID.fromString(GattAttributes.LED_SATURATION);
-    public final static UUID UUID_ACCEL_RANGE = UUID.fromString(GattAttributes.ACCEL_RANGE);
-    public final static UUID UUID_ACCEL_BANDWIDTH = UUID.fromString(GattAttributes.ACCEL_BANDWIDTH);
-    public final static UUID UUID_ACCEL_SAMPLE_RATE = UUID.fromString(GattAttributes.ACCEL_SAMPLE_RATE);
-    public final static UUID UUID_TAP_COUNT = UUID.fromString(GattAttributes.TAP_COUNT);
-    public final static UUID UUID_GAME_STATE = UUID.fromString(GattAttributes.GAME_STATE);
-
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
         @Override
@@ -112,7 +102,7 @@ public class BleSensorService extends Service {
                     return;
                 }
                 mHandler.post(() -> {
-                    var ok = device.enableCharacteristicNotification(UUID_TAP_COUNT, true);
+                    var ok = device.enableCharacteristicNotification(GattAttributes.TAP_COUNT, true);
                     if (ok)
                         Log.d(TAG, "tap count notification enabled");
                 });
@@ -149,7 +139,7 @@ public class BleSensorService extends Service {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             Log.d(TAG, "onCharacteristicChanged " + characteristic.getUuid());
             // this is a characteristic notification
-            if (mGame.isStarted() && UUID_TAP_COUNT.equals(characteristic.getUuid()))
+            if (mGame.isStarted() && GattAttributes.TAP_COUNT.equals(characteristic.getUuid()))
                 mGame.touch(gatt.getDevice().getAddress());
             broadcastUpdate(ACTION_DATA_CHANGED, gatt.getDevice(), characteristic);
         }
@@ -270,7 +260,7 @@ public class BleSensorService extends Service {
             for (var device : mDevices) {
                 if (address != null && !address.equals(device.getAddress()))
                     continue;
-                device.readCharacteristic(UUID_LED_SWITCH, (characteristic, status) -> {
+                device.readCharacteristic(GattAttributes.LED_SWITCH, (characteristic, status) -> {
                     if (status != BluetoothGatt.GATT_SUCCESS)
                         Log.e(TAG, "read LED switch failed with status " + status);
                     var byteArr = characteristic.getValue();
@@ -399,7 +389,7 @@ public class BleSensorService extends Service {
         // This is special handling for the Heart Rate Measurement profile.  Data parsing is
         // carried out as per profile specifications:
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
+        if (GattAttributes.HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
             int flag = characteristic.getProperties();
             int format = -1;
             if ((flag & 0x01) != 0) {
@@ -557,11 +547,11 @@ public class BleSensorService extends Service {
     }
 
     private static int getCharacteristicFormat(UUID characteristic) {
-        if (UUID_ACCEL_BANDWIDTH.equals(characteristic)) {
+        if (GattAttributes.ACCEL_BANDWIDTH.equals(characteristic)) {
             return BluetoothGattCharacteristic.FORMAT_UINT16;
-        } else if (UUID_ACCEL_SAMPLE_RATE.equals(characteristic)) {
+        } else if (GattAttributes.ACCEL_SAMPLE_RATE.equals(characteristic)) {
             return BluetoothGattCharacteristic.FORMAT_UINT16;
-        } else if (UUID_TAP_COUNT.equals(characteristic)) {
+        } else if (GattAttributes.TAP_COUNT.equals(characteristic)) {
             return BluetoothGattCharacteristic.FORMAT_SINT16;
         }
         return BluetoothGattCharacteristic.FORMAT_UINT8;

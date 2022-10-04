@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rocks.tbog.touchblue.BleSensor;
-import rocks.tbog.touchblue.BleSensorService;
+import rocks.tbog.touchblue.helpers.GattAttributes;
 import rocks.tbog.touchblue.helpers.ViewHolderAdapter;
 import rocks.tbog.touchblue.helpers.ViewHolderListAdapter;
 
@@ -38,7 +38,7 @@ public class BleSensorAdapter extends ViewHolderListAdapter<BleSensor, BleSensor
         @Override
         protected void setContent(BleSensor content, int position, @NonNull ViewHolderAdapter<BleSensor, ? extends ViewHolderAdapter.ViewHolder<BleSensor>> adapter) {
             text1.setText(content.getAddress() + (content.isConnected() ? " connected" : ""));
-            text2.setText(content.getName() + " " + content.getDataValue(BleSensorService.UUID_LED_SWITCH));
+            text2.setText(content.getName() + " " + content.getDataValue(GattAttributes.LED_SWITCH));
         }
     }
 }

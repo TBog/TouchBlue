@@ -3,6 +3,7 @@ package rocks.tbog.touchblue.games;
 import androidx.annotation.NonNull;
 
 import rocks.tbog.touchblue.BleSensorService;
+import rocks.tbog.touchblue.helpers.GattAttributes;
 
 public class TouchGameService implements GameService {
     @NonNull
@@ -17,27 +18,27 @@ public class TouchGameService implements GameService {
 
     @Override
     public void showLoading() {
-        mSensorService.setIntValue(mDeviceAddress, BleSensorService.UUID_GAME_STATE, 254);
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 254);  //GSC_LOADING
     }
 
     @Override
     public void showReady() {
-        mSensorService.setIntValue(mDeviceAddress, BleSensorService.UUID_GAME_STATE, 1);
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 1); //GSC_TOUCH_READY
     }
 
     @Override
     public void showError() {
-        mSensorService.setIntValue(mDeviceAddress, BleSensorService.UUID_GAME_STATE, 2);
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 2); //GSC_TOUCH_ERROR
     }
 
     @Override
     public void showValid() {
-        mSensorService.setIntValue(mDeviceAddress, BleSensorService.UUID_GAME_STATE, 3);
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 3); //GSC_TOUCH_VALID
     }
 
     @Override
     public void showNothing() {
-        mSensorService.setIntValue(mDeviceAddress, BleSensorService.UUID_GAME_STATE, 0);
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 0); //GSC_TOUCH_NOTHING
     }
 
     @Override

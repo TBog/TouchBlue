@@ -213,7 +213,7 @@ public class BleDeviceWrapper {
         bluetoothGatt.setCharacteristicNotification(characteristic, bEnable);
 
         // tell device that we're expecting notifications
-        var descriptor = characteristic.getDescriptor(UUID.fromString(GattAttributes.CCCD));
+        var descriptor = characteristic.getDescriptor(GattAttributes.CCCD);
         if (bEnable) {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         } else {

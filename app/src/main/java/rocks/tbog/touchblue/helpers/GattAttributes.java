@@ -26,19 +26,32 @@ import java.util.UUID;
  */
 public class GattAttributes {
     private static final HashMap<UUID, String> attributes = new HashMap<>();
-    public static final String CCCD = "00002902-0000-1000-8000-00805f9b34fb";
-    public static final String HEART_RATE_MEASUREMENT = "00002a37-0000-1000-8000-00805f9b34fb";
-    public static final String SERVICE_LED = "54B10000-5442-6f67-9000-cc505effcd37";
-    public static final String LED_SWITCH = "54B10001-5442-6f67-9000-cc505effcd37";
-    public static final String LED_BRIGHTNESS = "54B10002-5442-6f67-9000-cc505effcd37";
-    public static final String LED_SATURATION = "54B10003-5442-6f67-9000-cc505effcd37";
-    public static final String SERVICE_ACCEL = "54B20000-5442-6f67-9000-cc505effcd37";
-    public static final String ACCEL_RANGE = "54B10004-5442-6f67-9000-cc505effcd37";
-    public static final String ACCEL_BANDWIDTH = "54B10005-5442-6f67-9000-cc505effcd37";
-    public static final String ACCEL_SAMPLE_RATE = "54B10006-5442-6f67-9000-cc505effcd37";
-    public static final String TAP_COUNT = "54B10007-5442-6f67-9000-cc505effcd37";
-    public static final String GAME_STATE = "54B10008-5442-6F67-9000-CC505EFFCD37";
+    public static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    public static final UUID HEART_RATE_MEASUREMENT = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb");
+    public static final UUID SERVICE_LED = UUID.fromString("54B10000-5442-6f67-9000-cc505effcd37");
+    public static final UUID LED_SWITCH = UUID.fromString("54B10001-5442-6f67-9000-cc505effcd37");
+    public static final UUID LED_BRIGHTNESS = UUID.fromString("54B10002-5442-6f67-9000-cc505effcd37");
+    public static final UUID LED_SATURATION = UUID.fromString("54B10003-5442-6f67-9000-cc505effcd37");
+    public static final UUID SERVICE_ACCEL = UUID.fromString("54B20000-5442-6f67-9000-cc505effcd37");
+    public static final UUID ACCEL_RANGE = UUID.fromString("54B10004-5442-6f67-9000-cc505effcd37");
+    public static final UUID ACCEL_BANDWIDTH = UUID.fromString("54B10005-5442-6f67-9000-cc505effcd37");
+    public static final UUID ACCEL_SAMPLE_RATE = UUID.fromString("54B10006-5442-6f67-9000-cc505effcd37");
+    public static final UUID TAP_COUNT = UUID.fromString("54B10007-5442-6f67-9000-cc505effcd37");
+    public static final UUID GAME_STATE = UUID.fromString("54B10008-5442-6F67-9000-CC505EFFCD37");
 
+/** Game State Characteristic values defined on device
+ * #define GSC_RAINBOW 255
+ * #define GSC_LOADING 254
+ * #define GSC_TEST_RGB_TO_HSV 253
+ * #define GSC_TOUCH_NOTHING 0
+ * #define GSC_TOUCH_READY 1
+ * #define GSC_TOUCH_ERROR 2
+ * #define GSC_TOUCH_VALID 3
+ * #define GSC_TOUCH_COUNTDOWN 4
+ */
+
+    /** Initialize attributes
+     */
     static {
         // Sample Services.
         addAttribute("00001800-0000-1000-8000-00805f9b34fb", "Generic Access Service"); // will probably contain `appearance` and `device name` characteristics
@@ -73,6 +86,11 @@ public class GattAttributes {
         addAttribute(ACCEL_SAMPLE_RATE, "Accel sample rate"); // (Hz) 13,26,52,104,208,416,833,1660,3330,6660,13330
         addAttribute(TAP_COUNT, "tap count");
         addAttribute(GAME_STATE, "game state");
+    }
+
+
+    public static void addAttribute(@NonNull final UUID uuid, @NonNull final String name) {
+        attributes.put(uuid, name);
     }
 
     public static void addAttribute(@NonNull final String uuidString, @NonNull final String name) {

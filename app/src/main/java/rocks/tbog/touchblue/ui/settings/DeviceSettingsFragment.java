@@ -150,11 +150,11 @@ public class DeviceSettingsFragment extends Fragment {
     }
 
     private void showUploadDialog(@NonNull String address, @NonNull UUID characteristic) {
-        if (BleSensorService.UUID_ACCEL_RANGE.equals(characteristic)) {
+        if (GattAttributes.ACCEL_RANGE.equals(characteristic)) {
             showDropDownDialog(address, characteristic, R.array.accel_range_entries, R.array.accel_range_values);
-        } else if (BleSensorService.UUID_ACCEL_BANDWIDTH.equals(characteristic)) {
+        } else if (GattAttributes.ACCEL_BANDWIDTH.equals(characteristic)) {
             showDropDownDialog(address, characteristic, R.array.accel_bandwidth_entries, R.array.accel_bandwidth_values);
-        } else if (BleSensorService.UUID_ACCEL_SAMPLE_RATE.equals(characteristic)) {
+        } else if (GattAttributes.ACCEL_SAMPLE_RATE.equals(characteristic)) {
             showDropDownDialog(address, characteristic, R.array.accel_sample_rate_entries, R.array.accel_sample_rate_values);
         }
     }

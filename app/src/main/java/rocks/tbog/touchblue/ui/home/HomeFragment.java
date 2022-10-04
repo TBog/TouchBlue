@@ -27,6 +27,7 @@ import rocks.tbog.touchblue.BleSensorService;
 import rocks.tbog.touchblue.R;
 import rocks.tbog.touchblue.databinding.DialogSliderBinding;
 import rocks.tbog.touchblue.databinding.FragmentHomeBinding;
+import rocks.tbog.touchblue.helpers.GattAttributes;
 
 public class HomeFragment extends Fragment {
 
@@ -73,9 +74,9 @@ public class HomeFragment extends Fragment {
             return true;
         });
         menu.findItem(R.id.action_set_brightness)
-                .setOnMenuItemClickListener(item -> changeLedSetting(entry, BleSensorService.UUID_LED_BRIGHTNESS));
+                .setOnMenuItemClickListener(item -> changeLedSetting(entry, GattAttributes.LED_BRIGHTNESS));
         menu.findItem(R.id.action_set_saturation)
-                .setOnMenuItemClickListener(item -> changeLedSetting(entry, BleSensorService.UUID_LED_SATURATION));
+                .setOnMenuItemClickListener(item -> changeLedSetting(entry, GattAttributes.LED_SATURATION));
         menu.findItem(R.id.action_game_start).setOnMenuItemClickListener(item -> {
             var i = new Intent(BleSensorService.ACTION_START_GAME);
             i.putExtra(BleSensorService.EXTRA_ADDRESS, entry.getAddress());
