@@ -20,7 +20,7 @@ import rocks.tbog.touchblue.data.ServiceOrCharacteristic;
 
 public class AppViewModel extends AndroidViewModel {
 
-    private final MutableLiveData<List<BleSensor>> bleEntryList = new MutableLiveData<>();
+    private final MutableLiveData<List<BleSensorModel>> bleEntryList = new MutableLiveData<>();
     private final MutableLiveData<ServiceOrCharacteristicSet> uuidSet = new MutableLiveData<>();
 
     public static class ServiceOrCharacteristicSet {
@@ -86,7 +86,7 @@ public class AppViewModel extends AndroidViewModel {
         super(application);
     }
 
-    public LiveData<List<BleSensor>> getBleEntryList() {
+    public LiveData<List<BleSensorModel>> getBleEntryList() {
         return bleEntryList;
     }
 
@@ -94,7 +94,7 @@ public class AppViewModel extends AndroidViewModel {
         return uuidSet;
     }
 
-    public void setBleEntryList(List<BleSensor> entries) {
+    public void setBleEntryList(List<BleSensorModel> entries) {
         bleEntryList.postValue(entries);
     }
 
@@ -127,7 +127,7 @@ public class AppViewModel extends AndroidViewModel {
     }
 
     @NonNull
-    private List<BleSensor> getSensorList() {
+    private List<BleSensorModel> getSensorList() {
         var list = bleEntryList.getValue();
         if (list == null)
             list = new ArrayList<>(1);
@@ -136,7 +136,7 @@ public class AppViewModel extends AndroidViewModel {
         return list;
     }
 
-    public BleSensor addConnection(ScanResult scanResult) {
+    public BleSensorModel addConnection(ScanResult scanResult) {
         var list = getSensorList();
 
         // don't add the same address twice
@@ -146,13 +146,13 @@ public class AppViewModel extends AndroidViewModel {
         }
 
         // add address and notify observers
-        var bleSensor = new BleSensor(scanResult);
+        var bleSensor = new BleSensorModel(scanResult);
         if (list.add(bleSensor))
             bleEntryList.postValue(list);
         return bleSensor;
     }
 
-    public BleSensor addConnection(String address, String name) {
+    public BleSensorModel addConnection(String address, String name) {
         var list = getSensorList();
 
         // don't add the same address twice
@@ -162,14 +162,14 @@ public class AppViewModel extends AndroidViewModel {
         }
 
         // add address and notify observers
-        var bleSensor = new BleSensor(address, name);
+        var bleSensor = new BleSensorModel(address, name);
         list.add(bleSensor);
         bleEntryList.setValue(list);
         return bleSensor;
     }
 
     @Nullable
-    public BleSensor findSensor(@Nullable String address) {
+    public BleSensorModel findSensor(@Nullable String address) {
         var list = bleEntryList.getValue();
         if (list == null || address == null)
             return null;

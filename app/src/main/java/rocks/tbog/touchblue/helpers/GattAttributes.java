@@ -26,8 +26,11 @@ import java.util.UUID;
  */
 public class GattAttributes {
     private static final HashMap<UUID, String> attributes = new HashMap<>();
+    public static final UUID CUDD = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
     public static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     public static final UUID HEART_RATE_MEASUREMENT = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb");
+    public static final UUID SERVICE_BATTERY = UUID.fromString("0000180f-0000-1000-8000-00805f9b34fb");
+    public static final UUID BATTERY_LEVEL = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
     public static final UUID SERVICE_LED = UUID.fromString("54B10000-5442-6f67-9000-cc505effcd37");
     public static final UUID LED_SWITCH = UUID.fromString("54B10001-5442-6f67-9000-cc505effcd37");
     public static final UUID LED_BRIGHTNESS = UUID.fromString("54B10002-5442-6f67-9000-cc505effcd37");
@@ -73,6 +76,10 @@ public class GattAttributes {
         addAttribute("00002a28-0000-1000-8000-00805f9b34fb", "Software Revision String");
         addAttribute("00002a29-0000-1000-8000-00805f9b34fb", "Manufacturer Name String");
 
+        // Battery Service
+        addAttribute(SERVICE_BATTERY, "Battery Service");
+        addAttribute(BATTERY_LEVEL, "Battery level"); // 0..100
+
         // LED Service
         addAttribute(SERVICE_LED, "LED Service");
         addAttribute(LED_SWITCH, "LED on/off");
@@ -86,6 +93,10 @@ public class GattAttributes {
         addAttribute(ACCEL_SAMPLE_RATE, "Accel sample rate"); // (Hz) 13,26,52,104,208,416,833,1660,3330,6660,13330
         addAttribute(TAP_COUNT, "tap count");
         addAttribute(GAME_STATE, "game state");
+
+        // Descriptors
+        addAttribute(CUDD, "Characteristic User Description Descriptor"); // provides a human-readable name for a custom characteristic
+        addAttribute(CCCD, "Client Characteristic Configuration Descriptor"); // to register notification and indication
     }
 
 

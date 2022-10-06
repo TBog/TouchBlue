@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.UUID;
 
+import rocks.tbog.touchblue.ble.BleDeviceWrapper;
 import rocks.tbog.touchblue.games.Game;
 import rocks.tbog.touchblue.games.TouchGame;
 import rocks.tbog.touchblue.games.TouchGameService;
@@ -266,7 +267,7 @@ public class BleSensorService extends Service {
                     var byteArr = characteristic.getValue();
                     if (byteArr != null && byteArr.length > 0) {
                         var newValue = 1 - byteArr[0];
-                        device.writeCharacteristic(characteristic, newValue, BluetoothGattCharacteristic.FORMAT_UINT8);
+                        device.writeCharacteristic(characteristic, newValue, BluetoothGattCharacteristic.FORMAT_UINT8, null);
                     }
                 });
             }
@@ -278,8 +279,7 @@ public class BleSensorService extends Service {
                 for (var device : mDevices) {
                     if (address != null && !address.equals(device.getAddress()))
                         continue;
-                    var gattCharacteristic = device.getCachedCharacteristic(characteristic);
-                    device.readCharacteristic(gattCharacteristic.getService().getUuid(), characteristic);
+                    device.readCharacteristic(characteristic);
                 }
             } else {
                 // UUID is null, send services
@@ -312,8 +312,9 @@ public class BleSensorService extends Service {
                         continue;
                     }
                     var serviceUUID = characteristic.getService().getUuid();
-                    device.writeCharacteristic(serviceUUID, characteristicUUID, intData, getCharacteristicFormat(characteristicUUID));
-                    broadcastUpdate(device, characteristic);
+                    device.writeCharacteristic(serviceUUID, characteristicUUID, intData, getCharacteristicFormat(characteristicUUID), (ch, status) -> {
+                        broadcastUpdate(device, ch);
+                    });
                 }
             }
         } else if (ACTION_START_GAME.equals(action)) {
@@ -337,8 +338,9 @@ public class BleSensorService extends Service {
                 continue;
             }
             var serviceUUID = characteristic.getService().getUuid();
-            device.writeCharacteristic(serviceUUID, characteristicUUID, intData, getCharacteristicFormat(characteristicUUID));
-            broadcastUpdate(device, characteristic);
+            device.writeCharacteristic(serviceUUID, characteristicUUID, intData, getCharacteristicFormat(characteristicUUID), (ch, status) -> {
+                broadcastUpdate(device, ch);
+            });
         }
     }
 
@@ -355,7 +357,8 @@ public class BleSensorService extends Service {
         final Intent intent = new Intent(action);
         intent.putExtra(EXTRA_ADDRESS, device.getAddress());
         if (ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-            var arrServices = device.services.toArray(new BluetoothGattService[0]);
+            //intent.putParcelableArrayListExtra(EXTRA_GATT_SERVICES, new ArrayList<>(device.getServices()));
+            var arrServices = device.getServices().toArray(new BluetoothGattService[0]);
             intent.putExtra(EXTRA_GATT_SERVICES, arrServices);
         }
         sendBroadcast(intent);

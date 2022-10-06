@@ -22,7 +22,7 @@ import androidx.lifecycle.ViewModelProvider;
 import java.util.UUID;
 
 import rocks.tbog.touchblue.AppViewModel;
-import rocks.tbog.touchblue.BleSensor;
+import rocks.tbog.touchblue.BleSensorModel;
 import rocks.tbog.touchblue.BleSensorService;
 import rocks.tbog.touchblue.R;
 import rocks.tbog.touchblue.databinding.DialogSliderBinding;
@@ -104,7 +104,7 @@ public class HomeFragment extends Fragment {
         ContextCompat.startForegroundService(ctx, i);
     }
 
-    private boolean changeLedSetting(BleSensor sensor, UUID characteristic) {
+    private boolean changeLedSetting(BleSensorModel sensor, UUID characteristic) {
         var o = sensor.getDataValue(characteristic);
         if (o instanceof Integer) {
             var value = (Integer) o;

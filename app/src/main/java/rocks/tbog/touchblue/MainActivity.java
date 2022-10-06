@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void sendConnectAction(BleSensor bleSensor) {
+    private void sendConnectAction(BleSensorModel bleSensor) {
         var i = new Intent(BleSensorService.ACTION_CONNECT_TO);
         i.putExtra(BleSensorService.EXTRA_ADDRESS, bleSensor.getAddress());
         i.putExtra(BleSensorService.EXTRA_DEVICE_NAME, bleSensor.getName());
@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
         menu.findItem(R.id.action_test).setOnMenuItemClickListener(item -> {
-            sendConnectAction(new BleSensor("20:E4:63:15:BD:03", "LED"));
+            sendConnectAction(new BleSensorModel("20:E4:63:15:BD:03", "LED"));
             return true;
         }).setTitle("20:E4:63:15:BD:03");
         return true;

@@ -11,19 +11,19 @@ import java.util.UUID;
 
 import rocks.tbog.touchblue.helpers.BleHelper;
 
-public class BleSensor {
+public class BleSensorModel {
     @NonNull
     private final String address;
     private final String name;
     private final HashMap<UUID, MutableLiveData<Object>> mData = new HashMap<>(0);
     private boolean connected = false;
 
-    public BleSensor(@NonNull ScanResult result) {
+    public BleSensorModel(@NonNull ScanResult result) {
         this.address = result.getDevice().getAddress();
         this.name = BleHelper.getName(result);
     }
 
-    public BleSensor(@NonNull String address, String name) {
+    public BleSensorModel(@NonNull String address, String name) {
         this.address = address;
         this.name = name != null ? name : "-";
     }
