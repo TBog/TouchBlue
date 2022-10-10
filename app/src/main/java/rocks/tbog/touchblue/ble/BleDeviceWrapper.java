@@ -275,9 +275,9 @@ public class BleDeviceWrapper {
         return writeCharacteristic(serviceCharacteristic, newValue, formatType, callback);
     }
 
-    public boolean writeCharacteristic(UUID characteristic, int newValue, int formatType) {
+    public boolean writeCharacteristic(UUID characteristic, int newValue, int formatType, @Nullable IStatusCharacteristicCallback callback) {
         var serviceCharacteristic = getCachedCharacteristic(characteristic);
-        return writeCharacteristic(serviceCharacteristic, newValue, formatType, null);
+        return writeCharacteristic(serviceCharacteristic, newValue, formatType, callback);
     }
 
     public boolean readCharacteristic(@Nullable BluetoothGattCharacteristic serviceCharacteristic, @Nullable IStatusCharacteristicCallback callback) {

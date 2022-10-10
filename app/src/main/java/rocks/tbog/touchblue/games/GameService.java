@@ -1,5 +1,10 @@
 package rocks.tbog.touchblue.games;
 
+import rocks.tbog.touchblue.BleSensorService;
+
+/**
+ * Communication layer between a game and the {@link BleSensorService}
+ */
 public interface GameService {
 
     void showLoading();

@@ -5,6 +5,9 @@ import androidx.annotation.NonNull;
 import rocks.tbog.touchblue.BleSensorService;
 import rocks.tbog.touchblue.helpers.GattAttributes;
 
+/**
+ * Communication layer between {@link TouchGame} and the {@link BleSensorService}
+ */
 public class TouchGameService implements GameService {
     @NonNull
     private final BleSensorService mSensorService;

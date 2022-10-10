@@ -38,6 +38,7 @@ import java.util.UUID;
 
 import rocks.tbog.touchblue.ble.BleDeviceWrapper;
 import rocks.tbog.touchblue.games.Game;
+import rocks.tbog.touchblue.games.NullGame;
 import rocks.tbog.touchblue.games.TouchGame;
 import rocks.tbog.touchblue.games.TouchGameService;
 import rocks.tbog.touchblue.helpers.GattAttributes;
@@ -54,7 +55,7 @@ public class BleSensorService extends Service {
     private BluetoothManager mBluetoothManager;
     private final ArrayList<BleDeviceWrapper> mDevices = new ArrayList<>(0);
     private Handler mHandler;
-    private Game mGame = new Game();
+    private Game mGame = new NullGame();
 
     // broadcast/receiver actions
     public final static String ACTION_GATT_CONNECTED = "rocks.tbog.touchblue.ACTION_GATT_CONNECTED";
@@ -329,19 +330,16 @@ public class BleSensorService extends Service {
     }
 
     public void setIntValue(@NonNull String address, @NonNull UUID characteristicUUID, int intData) {
-        for (var device : mDevices) {
-            if (!address.equals(device.getAddress()))
-                continue;
-            var characteristic = device.getCachedCharacteristic(characteristicUUID);
-            if (characteristic == null) {
-                Log.e(TAG, "characteristic `" + characteristicUUID + "` not found for device `" + device.getAddress() + "`");
-                continue;
-            }
-            var serviceUUID = characteristic.getService().getUuid();
-            device.writeCharacteristic(serviceUUID, characteristicUUID, intData, getCharacteristicFormat(characteristicUUID), (ch, status) -> {
-                broadcastUpdate(device, ch);
-            });
+        var device = findDeviceByAddress(address);
+        if (device == null) {
+            Log.e(TAG, "[setIntValue] device `" + address + "` not registered");
+            return;
         }
+        var ok = device.writeCharacteristic(characteristicUUID, intData, getCharacteristicFormat(characteristicUUID), (ch, status) -> {
+            broadcastUpdate(device, ch);
+        });
+        if (!ok)
+            Log.e(TAG, characteristicUUID + " not found or can't be written to on device " + address);
     }
 
     private void broadcastUpdate(@NonNull final String action, @NonNull final BluetoothDevice device) {

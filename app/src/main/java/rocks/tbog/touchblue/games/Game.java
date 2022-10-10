@@ -2,18 +2,13 @@ package rocks.tbog.touchblue.games;
 
 import androidx.annotation.NonNull;
 
-public class Game {
+public interface Game {
 
-    public void start() {
-    }
+    void start();
 
-    public void stop() {
-    }
+    void stop();
 
-    public boolean isStarted() {
-        return false;
-    }
+    boolean isStarted();
 
-    public void touch(@NonNull String address) {
-    }
+    void touch(@NonNull String address);
 }
