@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -27,6 +28,7 @@ import rocks.tbog.touchblue.AppViewModel;
 import rocks.tbog.touchblue.BleSensorService;
 import rocks.tbog.touchblue.R;
 import rocks.tbog.touchblue.databinding.DialogDropDownBinding;
+import rocks.tbog.touchblue.databinding.DialogEditTextBinding;
 import rocks.tbog.touchblue.databinding.FragmentDeviceSettingsBinding;
 import rocks.tbog.touchblue.helpers.GattAttributes;
 
@@ -156,7 +158,33 @@ public class DeviceSettingsFragment extends Fragment {
             showDropDownDialog(address, characteristic, R.array.accel_bandwidth_entries, R.array.accel_bandwidth_values);
         } else if (GattAttributes.ACCEL_SAMPLE_RATE.equals(characteristic)) {
             showDropDownDialog(address, characteristic, R.array.accel_sample_rate_entries, R.array.accel_sample_rate_values);
+        } else {
+            showByteDialog(address, characteristic);
         }
+    }
+
+    private void showByteDialog(String address, UUID characteristic) {
+        var inflater = LayoutInflater.from(getContext());
+        var dlgBind = DialogEditTextBinding.inflate(inflater);
+        dlgBind.editText.setInputType(EditorInfo.TYPE_CLASS_NUMBER);
+        new AlertDialog.Builder(requireContext())
+                .setView(dlgBind.getRoot())
+                .setPositiveButton("Set", (dialog, which) -> {
+                    var value = dlgBind.editText.getText().toString();
+                    int newValue;
+                    try {
+                        newValue = Integer.parseInt(value);
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "value `" + value + "` is not integer");
+                        return;
+                    }
+                    var i = new Intent(BleSensorService.ACTION_SET_DATA);
+                    i.putExtra(BleSensorService.EXTRA_ADDRESS, address);
+                    i.putExtra(BleSensorService.EXTRA_DATA_UUID, characteristic);
+                    i.putExtra(BleSensorService.EXTRA_DATA, (byte) (newValue & 0xFF));
+                    sendIntentToService(i);
+                })
+                .show();
     }
 
     private void showDropDownDialog(String address, UUID characteristic, @ArrayRes int entries, @ArrayRes int values) {
