@@ -22,4 +22,5 @@
     <string name="notification_message">BT communication</string>
     <string name="action_start_service">Start service</string>
     <string name="action_stop_service">Stop service</string>
+    <string name="game_setup_title">Customize game</string>
 </resources>

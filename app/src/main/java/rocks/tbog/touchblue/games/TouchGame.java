@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 import java.util.Random;
 
-public class TouchGame extends Game {
+public class TouchGame implements Game {
     private static final String TAG = TouchGame.class.getSimpleName();
 
     enum State {

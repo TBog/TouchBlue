@@ -26,7 +26,9 @@ import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.FragmentNavigator;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
@@ -35,6 +37,7 @@ import com.google.android.material.navigation.NavigationView;
 import java.util.UUID;
 
 import rocks.tbog.touchblue.databinding.ActivityMainBinding;
+import rocks.tbog.touchblue.ui.game.GameSetup;
 import rocks.tbog.touchblue.ui.scanner.ScanActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -73,6 +76,29 @@ public class MainActivity extends AppCompatActivity {
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+
+        // add games to nav controller
+        {
+            var dest = navController.getNavigatorProvider().getNavigator(FragmentNavigator.class).createDestination();
+            dest.setId(View.generateViewId());
+            dest.setLabel("Game 1");
+            dest.setClassName(GameSetup.class.getName());
+            mAppBarConfiguration.getTopLevelDestinations().add(dest.getId());
+            navController.getGraph().addDestination(dest);
+            var item = navigationView.getMenu().add(Menu.NONE, dest.getId(), Menu.NONE, dest.getLabel());
+            item.setOnMenuItemClickListener(item1 -> {
+                var args = new Bundle();
+                args.putCharSequence("game_name", dest.getLabel());
+                var options = new NavOptions
+                        .Builder()
+                        .setLaunchSingleTop(true)
+                        .build();
+                navController.navigate(dest.getId(), args, options);
+                drawer.close();
+                return true;
+            });
+        }
+
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
