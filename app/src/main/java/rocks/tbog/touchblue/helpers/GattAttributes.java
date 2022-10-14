@@ -35,6 +35,7 @@ public class GattAttributes {
     public static final UUID LED_SWITCH = UUID.fromString("54B10001-5442-6f67-9000-cc505effcd37");
     public static final UUID LED_BRIGHTNESS = UUID.fromString("54B10002-5442-6f67-9000-cc505effcd37");
     public static final UUID LED_SATURATION = UUID.fromString("54B10003-5442-6f67-9000-cc505effcd37");
+    public static final UUID LED_COLOR = UUID.fromString("54B10009-5442-6f67-9000-cc505effcd37");
     public static final UUID SERVICE_ACCEL = UUID.fromString("54B20000-5442-6f67-9000-cc505effcd37");
     public static final UUID ACCEL_RANGE = UUID.fromString("54B10004-5442-6f67-9000-cc505effcd37");
     public static final UUID ACCEL_BANDWIDTH = UUID.fromString("54B10005-5442-6f67-9000-cc505effcd37");

@@ -548,12 +548,14 @@ public class BleSensorService extends Service {
     }
 
     private static int getCharacteristicFormat(UUID characteristic) {
-        if (GattAttributes.ACCEL_BANDWIDTH.equals(characteristic)) {
-            return BluetoothGattCharacteristic.FORMAT_UINT16;
-        } else if (GattAttributes.ACCEL_SAMPLE_RATE.equals(characteristic)) {
+        if (GattAttributes.ACCEL_BANDWIDTH.equals(characteristic)
+                || GattAttributes.ACCEL_SAMPLE_RATE.equals(characteristic)
+                || GattAttributes.GAME_STATE.equals(characteristic)) {
             return BluetoothGattCharacteristic.FORMAT_UINT16;
         } else if (GattAttributes.TAP_COUNT.equals(characteristic)) {
             return BluetoothGattCharacteristic.FORMAT_SINT16;
+        } else if (GattAttributes.LED_COLOR.equals(characteristic)) {
+            return BluetoothGattCharacteristic.FORMAT_UINT32;
         }
         return BluetoothGattCharacteristic.FORMAT_UINT8;
     }

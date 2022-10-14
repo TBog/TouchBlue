@@ -19,4 +19,7 @@ public interface GameService {
 
     boolean isAddressValid(String address);
 
+    void showColor(int color);
+
+    void showAnim(int animIdx);
 }

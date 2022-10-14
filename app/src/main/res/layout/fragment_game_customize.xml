@@ -21,14 +21,24 @@
 
     <TextView
         android:id="@+id/text_game_name"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAlignment="textStart"
         android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_title"
         tools:text="Game name" />
+
+    <ImageButton
+        android:id="@+id/btn_save"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="save changes"
+        app:layout_constraintBottom_toBottomOf="@id/text_game_name"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/text_game_name"
+        app:srcCompat="@android:drawable/ic_menu_save" />
 
     <View
         android:id="@+id/hr"

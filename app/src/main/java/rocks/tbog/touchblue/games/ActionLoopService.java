@@ -5,16 +5,13 @@ import androidx.annotation.NonNull;
 import rocks.tbog.touchblue.BleSensorService;
 import rocks.tbog.touchblue.helpers.GattAttributes;
 
-/**
- * Communication layer between {@link TouchGame} and the {@link BleSensorService}
- */
-public class TouchGameService implements GameService {
+public class ActionLoopService implements GameService{
     @NonNull
     private final BleSensorService mSensorService;
     @NonNull
     private final String mDeviceAddress;
 
-    public TouchGameService(@NonNull BleSensorService sensorService, @NonNull String address) {
+    public ActionLoopService(@NonNull BleSensorService sensorService, @NonNull String address) {
         mSensorService = sensorService;
         mDeviceAddress = address;
     }
@@ -26,22 +23,22 @@ public class TouchGameService implements GameService {
 
     @Override
     public void showReady() {
-        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 1); //GSC_TOUCH_READY
+        // not used
     }
 
     @Override
     public void showError() {
-        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 2); //GSC_TOUCH_ERROR
+        // not used
     }
 
     @Override
     public void showValid() {
-        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 3); //GSC_TOUCH_VALID
+        // not used
     }
 
     @Override
     public void showNothing() {
-        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 0); //GSC_TOUCH_NOTHING
+        // not used
     }
 
     @Override
@@ -51,11 +48,12 @@ public class TouchGameService implements GameService {
 
     @Override
     public void showColor(int color) {
-        // not used
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 100);  //GSC_COLOR
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.LED_COLOR, color & 0xffffff);
     }
 
     @Override
     public void showAnim(int animIdx) {
-        // not used
+        mSensorService.setIntValue(mDeviceAddress, GattAttributes.GAME_STATE, 101 | (animIdx << 8));  //GSC_ANIM
     }
 }

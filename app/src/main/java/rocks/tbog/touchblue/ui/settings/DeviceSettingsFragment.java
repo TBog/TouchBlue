@@ -4,14 +4,15 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.ArrayRes;
 import androidx.annotation.NonNull;
@@ -166,7 +167,13 @@ public class DeviceSettingsFragment extends Fragment {
     private void showByteDialog(String address, UUID characteristic) {
         var inflater = LayoutInflater.from(getContext());
         var dlgBind = DialogEditTextBinding.inflate(inflater);
-        dlgBind.editText.setInputType(EditorInfo.TYPE_CLASS_NUMBER);
+        dlgBind.editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+        {
+            var dev = appData.findSensor(address);
+            var data = dev != null ? dev.getDataValue(characteristic) : null;
+            if (data != null)
+                dlgBind.editText.setText(String.valueOf(data));
+        }
         new AlertDialog.Builder(requireContext())
                 .setView(dlgBind.getRoot())
                 .setPositiveButton("Set", (dialog, which) -> {
@@ -176,12 +183,13 @@ public class DeviceSettingsFragment extends Fragment {
                         newValue = Integer.parseInt(value);
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "value `" + value + "` is not integer");
+                        Toast.makeText(getContext(), "value `" + value + "` is not integer", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     var i = new Intent(BleSensorService.ACTION_SET_DATA);
                     i.putExtra(BleSensorService.EXTRA_ADDRESS, address);
                     i.putExtra(BleSensorService.EXTRA_DATA_UUID, characteristic);
-                    i.putExtra(BleSensorService.EXTRA_DATA, (byte) (newValue & 0xFF));
+                    i.putExtra(BleSensorService.EXTRA_DATA, newValue);
                     sendIntentToService(i);
                 })
                 .show();

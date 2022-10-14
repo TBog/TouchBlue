@@ -13,6 +13,8 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+import rocks.tbog.touchblue.R;
+
 public class GameActionAdapter extends BaseExpandableListAdapter {
     private final List<GameViewModel.GameAction> mGameActionList = new ArrayList<>(0);
     protected final int[] mButtonIds;
@@ -35,14 +37,25 @@ public class GameActionAdapter extends BaseExpandableListAdapter {
         mButtonIds = buttons;
         mExpandedGroupLayout = android.R.layout.simple_expandable_list_item_1;
         mCollapsedGroupLayout = android.R.layout.simple_expandable_list_item_2;
-        mChildLayout = android.R.layout.simple_expandable_list_item_2;
-        mLastChildLayout = android.R.layout.simple_expandable_list_item_2;
+        mChildLayout = R.layout.expandable_list_child_game_action;
+        mLastChildLayout = R.layout.expandable_list_child_game_action;
     }
 
     public void setGameActionList(@NonNull List<GameViewModel.GameAction> list) {
         mGameActionList.clear();
         mGameActionList.addAll(list);
         notifyDataSetChanged();
+    }
+
+    public void changeActionValue(int groupPosition, int value) {
+        var action = mGameActionList.get(groupPosition);
+        action.mValue = value;
+        notifyDataSetInvalidated();
+    }
+
+    public void changeAction(int groupPosition, GameViewModel.GameAction action) {
+        mGameActionList.set(groupPosition, action);
+        notifyDataSetInvalidated();
     }
 
     public void setOnButtonClickListener(@Nullable OnButtonClick listener) {

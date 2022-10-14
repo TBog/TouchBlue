@@ -10,9 +10,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -22,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.collection.ArraySet;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
@@ -34,10 +37,14 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import rocks.tbog.touchblue.databinding.ActivityMainBinding;
+import rocks.tbog.touchblue.helpers.Serializer;
 import rocks.tbog.touchblue.ui.game.GameSetup;
+import rocks.tbog.touchblue.ui.game.GameViewModel;
 import rocks.tbog.touchblue.ui.scanner.ScanActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -77,26 +84,16 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        var gameSet = prefs.getStringSet("game_set", Collections.emptySet());
+        if (gameSet.isEmpty()) {
+            gameSet = resetGamesToDefault(prefs);
+        }
         // add games to nav controller
-        {
-            var dest = navController.getNavigatorProvider().getNavigator(FragmentNavigator.class).createDestination();
-            dest.setId(View.generateViewId());
-            dest.setLabel("Game 1");
-            dest.setClassName(GameSetup.class.getName());
-            mAppBarConfiguration.getTopLevelDestinations().add(dest.getId());
-            navController.getGraph().addDestination(dest);
-            var item = navigationView.getMenu().add(Menu.NONE, dest.getId(), Menu.NONE, dest.getLabel());
-            item.setOnMenuItemClickListener(item1 -> {
-                var args = new Bundle();
-                args.putCharSequence("game_name", dest.getLabel());
-                var options = new NavOptions
-                        .Builder()
-                        .setLaunchSingleTop(true)
-                        .build();
-                navController.navigate(dest.getId(), args, options);
-                drawer.close();
-                return true;
-            });
+        for (var serializedGame : gameSet) {
+            var game = Serializer.fromStringOrNull(serializedGame, GameViewModel.GameLoop.class);
+            if (game != null)
+                addGameToDrawer(game, navController);
         }
 
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
@@ -129,6 +126,41 @@ public class MainActivity extends AppCompatActivity {
             var i = new Intent(BleSensorService.ACTION_REQUEST_DATA);
             sendIntentToService(i);
         }
+    }
+
+    private ArraySet<String> resetGamesToDefault(SharedPreferences prefs) {
+        var gameList = List.of(GameViewModel.GameLoop.DEFAULT_GAME);
+        var serializedGameSet = new ArraySet<String>(gameList.size());
+        for (var game : gameList)
+            serializedGameSet.add(Serializer.toStringOrNull(game));
+        prefs.edit()
+                .putStringSet("game_set", serializedGameSet)
+                .apply();
+        return serializedGameSet;
+    }
+
+    private void addGameToDrawer(GameViewModel.GameLoop game, NavController navController) {
+        final var navigationView = binding.navView;
+        final var drawer = binding.drawerLayout;
+        var dest = navController.getNavigatorProvider().getNavigator(FragmentNavigator.class).createDestination();
+        dest.setId(View.generateViewId());
+        dest.setLabel(game.mGameName);
+        dest.setClassName(GameSetup.class.getName());
+        mAppBarConfiguration.getTopLevelDestinations().add(dest.getId());
+        navController.getGraph().addDestination(dest);
+        var item = navigationView.getMenu().add(Menu.NONE, dest.getId(), Menu.NONE, dest.getLabel());
+        item.setOnMenuItemClickListener(item1 -> {
+            var args = new Bundle();
+            args.putCharSequence("game_name", dest.getLabel());
+            args.putSerializable("game_loop", game);
+            var options = new NavOptions
+                    .Builder()
+                    .setLaunchSingleTop(true)
+                    .build();
+            navController.navigate(dest.getId(), args, options);
+            drawer.close();
+            return true;
+        });
     }
 
     @Override
