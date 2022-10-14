@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -17,7 +18,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
+import rocks.tbog.touchblue.AppViewModel;
 import rocks.tbog.touchblue.R;
 import rocks.tbog.touchblue.databinding.DialogDropDownBinding;
 import rocks.tbog.touchblue.databinding.DialogSliderBinding;
@@ -27,13 +30,16 @@ import rocks.tbog.touchblue.helpers.Serializer;
 public class GameSetup extends Fragment {
 
     private FragmentGameCustomizeBinding binding;
+    private GameViewModel gameViewModel;
+    private AppViewModel appData;
 
     public GameSetup() {
         //  An empty constructor for Android System to use
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        var gameViewModel = new ViewModelProvider(this).get(GameViewModel.class);
+        gameViewModel = new ViewModelProvider(this).get(GameViewModel.class);
+        appData = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
 
         binding = FragmentGameCustomizeBinding.inflate(inflater, container, false);
         var gameActionAdapter = new GameActionAdapter(new int[]{R.id.btn_config});
@@ -54,7 +60,10 @@ public class GameSetup extends Fragment {
 
         gameViewModel.getTitle().observe(getViewLifecycleOwner(), game -> binding.textTitle.setText(game));
         gameViewModel.getGameName().observe(getViewLifecycleOwner(), game -> binding.textGameName.setText(game));
-        gameViewModel.getLoop().observe(getViewLifecycleOwner(), loop -> gameActionAdapter.setGameActionList(loop.mLoopList));
+        gameViewModel.getLoop().observe(getViewLifecycleOwner(), loop -> {
+            gameActionAdapter.setGameActionList(loop.mLoopList);
+            binding.btnSave.setVisibility(View.VISIBLE);
+        });
 
         gameActionAdapter.setOnButtonClickListener(this::changeActionButton);
 
@@ -76,9 +85,11 @@ public class GameSetup extends Fragment {
             }
             var serializedGame = Serializer.toStringOrNull(gameViewModel.getLoop().getValue());
             if (serializedGame != null && gameSet.add(serializedGame)) {
+                appData.updateGameList(gameSet);
                 prefs.edit()
                         .putStringSet("game_set", gameSet)
                         .apply();
+                Toast.makeText(getContext(), "Game `" + gameName + "` saved!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -89,10 +100,6 @@ public class GameSetup extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
-    }
-
-    private void updateSaveIcon() {
-        binding.btnSave.setVisibility(View.VISIBLE);
     }
 
     private void changeActionButton(View buttonView, GameActionAdapter adapter, int groupPosition, int childPosition) {
@@ -116,8 +123,16 @@ public class GameSetup extends Fragment {
         }
         showDropDownDialog(names, values, pos, value -> {
             adapter.changeAction(group, new GameViewModel.GameAction(value, 0));
-            updateSaveIcon();
+            updateGameLoop(adapter.getGameActionList());
         });
+    }
+
+    private void updateGameLoop(List<GameViewModel.GameAction> gameActionList) {
+        var currentGame = gameViewModel.getLoop().getValue();
+        var gameName = currentGame != null ? currentGame.mGameName : gameViewModel.getGameName().getValue();
+
+        var gameLoop = new GameViewModel.GameLoop(gameActionList, String.valueOf(gameName));
+        gameViewModel.setLoop(gameLoop);
     }
 
     interface OnValueSet<T> {
@@ -168,7 +183,7 @@ public class GameSetup extends Fragment {
         }
         showSliderDialog(adapter.getGroup(group).mValue, minValue, maxValue, value -> {
             adapter.changeActionValue(group, value);
-            updateSaveIcon();
+            updateGameLoop(adapter.getGameActionList());
         });
     }
 

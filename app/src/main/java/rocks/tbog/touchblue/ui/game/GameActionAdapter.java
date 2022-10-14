@@ -44,7 +44,12 @@ public class GameActionAdapter extends BaseExpandableListAdapter {
     public void setGameActionList(@NonNull List<GameViewModel.GameAction> list) {
         mGameActionList.clear();
         mGameActionList.addAll(list);
-        notifyDataSetChanged();
+        notifyDataSetInvalidated();
+    }
+
+    @NonNull
+    public List<GameViewModel.GameAction> getGameActionList() {
+        return mGameActionList;
     }
 
     public void changeActionValue(int groupPosition, int value) {

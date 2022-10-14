@@ -12,5 +12,20 @@
             android:id="@+id/nav_device_settings"
             android:icon="@drawable/ic_menu_device_settings"
             android:title="@string/menu_device_settings" />
+
+        <item
+            android:id="@+id/cat_games"
+            android:menuCategory="container"
+
+            android:title="@string/menu_games">
+            <menu>
+                <group android:checkableBehavior="single">
+                    <item
+                        android:visible="false"
+                        tools:title="Default game"
+                        tools:visible="true" />
+                </group>
+            </menu>
+        </item>
     </group>
 </menu>

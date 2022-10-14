@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.navigation.fragment.FragmentNavigator;
@@ -37,7 +38,9 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        appData = new ViewModelProvider(this).get(AppViewModel.class);
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -87,14 +92,31 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         var gameSet = prefs.getStringSet("game_set", Collections.emptySet());
         if (gameSet.isEmpty()) {
-            gameSet = resetGamesToDefault(prefs);
+            resetGamesToDefault(prefs);
         }
-        // add games to nav controller
-        for (var serializedGame : gameSet) {
-            var game = Serializer.fromStringOrNull(serializedGame, GameViewModel.GameLoop.class);
-            if (game != null)
+        updateGameList(prefs);
+
+        appData.getGameList().observe(this, gameList -> {
+            // remove previous games from controller
+            for (Iterator<NavDestination> iterator = navController.getGraph().iterator(); iterator.hasNext(); ) {
+                NavDestination node = iterator.next();
+                if (node instanceof FragmentNavigator.Destination) {
+                    var dest = (FragmentNavigator.Destination) node;
+                    if (GameSetup.class.getName().equals(dest.getClassName())) {
+                        iterator.remove();
+                    }
+                }
+            }
+
+            // remove previous games from drawer menu
+            var category = navigationView.getMenu().findItem(R.id.cat_games);
+            category.getSubMenu().clear();
+
+            // add games to drawer menu and nav controller
+            for (var game : gameList) {
                 addGameToDrawer(game, navController);
-        }
+            }
+        });
 
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
@@ -111,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        appData = new ViewModelProvider(this).get(AppViewModel.class);
         appData.getBleEntryList().observe(this, bleEntries -> invalidateOptionsMenu());
 
         IntentFilter filter = new IntentFilter();
@@ -128,7 +149,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private ArraySet<String> resetGamesToDefault(SharedPreferences prefs) {
+    private void updateGameList(SharedPreferences prefs) {
+        var gameSet = prefs.getStringSet("game_set", Collections.emptySet());
+        var gameList = new ArrayList<GameViewModel.GameLoop>(gameSet.size());
+        for (var serializedGame : gameSet) {
+            var game = Serializer.fromStringOrNull(serializedGame, GameViewModel.GameLoop.class);
+            if (game == null)
+                continue;
+            gameList.add(game);
+        }
+        appData.setGameList(gameList);
+    }
+
+    private void resetGamesToDefault(SharedPreferences prefs) {
         var gameList = List.of(GameViewModel.GameLoop.DEFAULT_GAME);
         var serializedGameSet = new ArraySet<String>(gameList.size());
         for (var game : gameList)
@@ -136,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
         prefs.edit()
                 .putStringSet("game_set", serializedGameSet)
                 .apply();
-        return serializedGameSet;
     }
 
     private void addGameToDrawer(GameViewModel.GameLoop game, NavController navController) {
@@ -146,9 +178,15 @@ public class MainActivity extends AppCompatActivity {
         dest.setId(View.generateViewId());
         dest.setLabel(game.mGameName);
         dest.setClassName(GameSetup.class.getName());
-        mAppBarConfiguration.getTopLevelDestinations().add(dest.getId());
+        //mAppBarConfiguration.getTopLevelDestinations().add(dest.getId());
         navController.getGraph().addDestination(dest);
-        var item = navigationView.getMenu().add(Menu.NONE, dest.getId(), Menu.NONE, dest.getLabel());
+
+        var category = navigationView.getMenu().findItem(R.id.cat_games);
+
+        var item = category.getSubMenu().add(category.getGroupId(), dest.getId(), Menu.NONE, dest.getLabel());
+        item.setIcon(R.drawable.ic_game_controller);
+
+        //var item = navigationView.getMenu().add(Menu.NONE, dest.getId(), Menu.NONE, dest.getLabel());
         item.setOnMenuItemClickListener(item1 -> {
             var args = new Bundle();
             args.putCharSequence("game_name", dest.getLabel());

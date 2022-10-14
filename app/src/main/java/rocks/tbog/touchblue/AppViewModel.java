@@ -12,16 +12,20 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import rocks.tbog.touchblue.data.ServiceOrCharacteristic;
+import rocks.tbog.touchblue.helpers.Serializer;
+import rocks.tbog.touchblue.ui.game.GameViewModel;
 
 public class AppViewModel extends AndroidViewModel {
 
     private final MutableLiveData<List<BleSensorModel>> bleEntryList = new MutableLiveData<>();
     private final MutableLiveData<ServiceOrCharacteristicSet> uuidSet = new MutableLiveData<>();
+    private final MutableLiveData<List<GameViewModel.GameLoop>> gameList = new MutableLiveData<>();
 
     public static class ServiceOrCharacteristicSet {
         private final Set<ServiceOrCharacteristic> allServicesAndCharacteristics = new ArraySet<>();
@@ -94,8 +98,30 @@ public class AppViewModel extends AndroidViewModel {
         return uuidSet;
     }
 
+    public LiveData<List<GameViewModel.GameLoop>> getGameList() {
+        return gameList;
+    }
+
     public void setBleEntryList(List<BleSensorModel> entries) {
         bleEntryList.postValue(entries);
+    }
+
+    public void setGameList(List<GameViewModel.GameLoop> list) {
+        gameList.setValue(list);
+    }
+
+    public void updateGameList(ArraySet<String> gameSet) {
+        var games = new ArrayList<GameViewModel.GameLoop>(gameSet.size());
+        for (Iterator<String> iterator = gameSet.iterator(); iterator.hasNext(); ) {
+            String serializedGame = iterator.next();
+            var game = Serializer.fromStringOrNull(serializedGame, GameViewModel.GameLoop.class);
+            if (game == null) {
+                iterator.remove();
+                continue;
+            }
+            games.add(game);
+        }
+        setGameList(games);
     }
 
     public void updateServiceAndCharacteristics(BluetoothGattService service) {
